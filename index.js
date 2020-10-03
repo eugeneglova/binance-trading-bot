@@ -130,7 +130,7 @@ const onPositionUpdate = async () => {
   if (!state.lOrders.length) {
     await (async () => {
       console.log('getting limit orders')
-      const allOpenOrders = await binance.futures.openOrders(SYMBOL)
+      const allOpenOrders = await binance.futures.openOrders(SYMBOL).catch(e => console.error(e))
       const lSide = BOT_SIDE_SIGN > 0 ? 'BUY' : 'SELL'
       const orders = _.filter(
         allOpenOrders,
