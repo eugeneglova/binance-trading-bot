@@ -30,17 +30,17 @@ const getNextPrice = (price, i, sideSign, xPrice = 0.0065) => (
   price - sideSign * price * xPrice * (i * 0.01 + 1)
 )
 
-const getNextAmount = (amount, i) => (
-  amount * (i ? 2 : 1)
+const getNextAmount = (amount, i, xAmount = 2) => (
+  amount * (i ? xAmount : 1)
 )
 
-const getOrders = ({ price, amount, count, sideSign, start = 0, xPrice = 0.0065 }) => {
+const getOrders = ({ price, amount, count, sideSign, start = 0, xPrice = 0.0065, xAmount = 2 }) => {
   const res = _.range(0, count).reduce(
     (acc, i) => {
       // const price = acc.price - sideSign * acc.price * 0.0055 * (i * 0.01 + 1)
       let price = getNextPrice(acc.price, i, sideSign, xPrice)
       // const amount = acc.amount * (i ? 2 : 1)
-      const amount = getNextAmount(acc.amount, i)
+      const amount = getNextAmount(acc.amount, i, xAmount)
       let orders = [
         {
           price: precision(acc.price),

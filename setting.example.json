@@ -6,6 +6,7 @@
   "MIN_AMOUNT": 0.001,
   "AMOUNT": 0.002,
   "X_PRICE": 0.0065,
+  "X_AMOUNT": 2,
   "ORDERS": 8,
   "LEVERAGE": 20,
   "TP_PERCENT": 2,

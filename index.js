@@ -20,8 +20,8 @@ let {
   MIN_AMOUNT,
   AMOUNT,
   X_PRICE,
+  X_AMOUNT,
   ORDERS,
-  LEVERAGE,
   TP_PERCENT,
   SP_PERCENT,
   SP_PERCENT_TRIGGER,
@@ -33,6 +33,7 @@ setInterval(() => {
   const settings = importFresh(`./${process.env.BINANCE_SETTINGS}`)
   AMOUNT = settings.AMOUNT
   X_PRICE = settings.X_PRICE
+  X_AMOUNT = settings.X_AMOUNT
   ORDERS = settings.ORDERS
   LEVERAGE = settings.LEVERAGE
   TP_PERCENT = settings.TP_PERCENT
@@ -73,6 +74,7 @@ const createOrders = async () => {
     count: ORDERS,
     sideSign: BOT_SIDE_SIGN,
     xPrice: X_PRICE,
+    xAmount: X_AMOUNT,
   })
   console.log(orders)
   console.log('create orders')
@@ -227,6 +229,7 @@ const onPositionUpdate = async () => {
         sideSign: BOT_SIDE_SIGN,
         start: Math.ceil(posSize) - 1,
         xPrice: X_PRICE,
+        xAmount: X_AMOUNT,
       })
       orders.shift()
       console.log('create orders')
