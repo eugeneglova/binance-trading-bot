@@ -8,7 +8,6 @@
   "X_PRICE": 0.0065,
   "X_AMOUNT": 2,
   "ORDERS": 8,
-  "LEVERAGE": 20,
   "TP_PERCENT": 2,
   "SP_PERCENT": 0.15,
   "SP_PERCENT_TRIGGER": 0.3,

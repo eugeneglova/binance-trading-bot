@@ -35,7 +35,6 @@ setInterval(() => {
   X_PRICE = settings.X_PRICE
   X_AMOUNT = settings.X_AMOUNT
   ORDERS = settings.ORDERS
-  LEVERAGE = settings.LEVERAGE
   TP_PERCENT = settings.TP_PERCENT
   SP_PERCENT = settings.SP_PERCENT
   SP_PERCENT_TRIGGER = settings.SP_PERCENT_TRIGGER
