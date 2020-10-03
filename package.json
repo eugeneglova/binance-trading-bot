@@ -1,0 +1,17 @@
+{
+  "name": "binance-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "long": "BINANCE_SETTINGS=setting.eth-long.json node .",
+    "short": "BINANCE_SETTINGS=setting.eth-short.json node ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "import-fresh": "^3.2.1",
+    "lodash": "^4.17.20",
+    "node-binance-api-ext": "^2.0.0"
+  }
+}
