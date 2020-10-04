@@ -48,6 +48,7 @@ const BOT_SIDE_SIGN = SIDE === 'SHORT' ? -1 : 1
 const state = {
   lOrders: [],
   tpOrders: [],
+  slOrder: null,
   tradesCount: 0,
 }
 
@@ -134,7 +135,6 @@ const createTpOrders = async () => {
 
 const onPositionNew = () => {
   console.log('NEW POS')
-  state.tradesCount++
   createTpOrders()
 }
 
@@ -294,18 +294,6 @@ const onPositionUpdate = async () => {
       Math.abs(precision(getOrdersAmount(state.tpOrders), state.quantityPrecision)) <
         Math.abs(precision(parseFloat(p.positionAmt), state.quantityPrecision)))
   ) {
-    // const maxPrice = getPLPrice(p.entryPrice, TP_PERCENT, BOT_SIDE_SIGN)
-    const maxPrice = price
-    const orders = getTpOrders({
-      basePrice: parseFloat(p.entryPrice),
-      amount: parseFloat(p.positionAmt),
-      minAmount: MIN_AMOUNT,
-      maxPrice,
-      sideSign: BOT_SIDE_SIGN,
-      maxOrders: ORDERS,
-      pricePrecision: state.pricePrecision,
-      quantityPrecision: state.quantityPrecision,
-    })
     Promise.all(
       state.tpOrders.map(({ orderId }) =>
         binance.futures
@@ -313,10 +301,10 @@ const onPositionUpdate = async () => {
           .catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     ).then(async () => {
-      createTpOrders()
+      await createTpOrders()
+      state.tpOrders = []
+      state.lOrders = []
     })
-    state.tpOrders = []
-    state.lOrders = []
   }
 
   console.log(
@@ -407,6 +395,10 @@ const onPositionUpdate = async () => {
 
 const onPositionClose = async () => {
   console.log('CLOSE POS')
+  state.lOrders = []
+  state.tpOrders = []
+  state.slOrder = null
+  state.tradesCount += 1
   cancelOrders()
 }
 
