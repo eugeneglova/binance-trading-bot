@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "long": "BINANCE_SETTINGS=setting.eth-long.json node .",
-    "short": "BINANCE_SETTINGS=setting.eth-short.json node ."
+    "long": "BINANCE_SETTINGS=settings.eth-long.json node .",
+    "short": "BINANCE_SETTINGS=settings.eth-short.json node .",
+    "btc-short": "BINANCE_SETTINGS=settings.btс-short.json node ."
   },
   "author": "",
   "license": "ISC",
