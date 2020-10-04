@@ -378,8 +378,9 @@ const onPositionUpdate = async () => {
       },
     ).catch((e) => console.error(new Error().stack) || console.error(e))
   } else if (
-    (state.slOrder && parseFloat(state.slOrder.stopPrice) !== slPrice) ||
-    parseFloat(state.slOrder.origQty) !== amount
+    state.slOrder &&
+    (parseFloat(state.slOrder.stopPrice) !== slPrice ||
+      parseFloat(state.slOrder.origQty) !== amount)
   ) {
     console.log({
       p: state.slOrder.stopPrice,
