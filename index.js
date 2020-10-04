@@ -57,18 +57,24 @@ const binance = Binance({
 })
 
 const cancelOrders = async () => {
-  const allOpenOrders = await binance.futures.openOrders(SYMBOL).catch((e) => console.error(e))
+  const allOpenOrders = await binance.futures
+    .openOrders(SYMBOL)
+    .catch((e) => console.error(new Error().stack) || console.error(e))
   const orders = _.filter(allOpenOrders, (o) => o.positionSide === SIDE)
   // console.log(orders)
   return Promise.all(
     orders.map(({ orderId }) =>
-      binance.futures.cancel(SYMBOL, { orderId }).catch((e) => console.error(e)),
+      binance.futures
+        .cancel(SYMBOL, { orderId })
+        .catch((e) => console.error(new Error().stack) || console.error(e)),
     ),
   )
 }
 
 const createOrders = async () => {
-  const quote = await binance.futures.quote(SYMBOL).catch((e) => console.error(e))
+  const quote = await binance.futures
+    .quote(SYMBOL)
+    .catch((e) => console.error(new Error().stack) || console.error(e))
   const topBookPrice = parseFloat(BOT_SIDE_SIGN > 0 ? quote.bidPrice : quote.askPrice)
   const price = getNextPrice(topBookPrice, 0, BOT_SIDE_SIGN, [_.first(X_PRICE) * 0.1])
   console.log({ price, topBookPrice })
@@ -140,7 +146,9 @@ const onPositionUpdate = async () => {
   if (!state.lOrders.length) {
     await (async () => {
       console.log('getting limit orders')
-      const allOpenOrders = await binance.futures.openOrders(SYMBOL).catch((e) => console.error(e))
+      const allOpenOrders = await binance.futures
+        .openOrders(SYMBOL)
+        .catch((e) => console.error(new Error().stack) || console.error(e))
       const lSide = BOT_SIDE_SIGN > 0 ? 'BUY' : 'SELL'
       const orders = _.filter(
         allOpenOrders,
@@ -157,7 +165,9 @@ const onPositionUpdate = async () => {
   if (!state.tpOrders.length) {
     await (async () => {
       console.log('getting tp orders')
-      const allOpenOrders = await binance.futures.openOrders(SYMBOL).catch((e) => console.error(e))
+      const allOpenOrders = await binance.futures
+        .openOrders(SYMBOL)
+        .catch((e) => console.error(new Error().stack) || console.error(e))
       const tpSide = BOT_SIDE_SIGN < 0 ? 'BUY' : 'SELL'
       const orders = _.filter(
         allOpenOrders,
@@ -174,7 +184,9 @@ const onPositionUpdate = async () => {
   if (!state.spOrder && plPerc > SP_PERCENT) {
     await (async () => {
       console.log('getting sp order')
-      const allOpenOrders = await binance.futures.openOrders(SYMBOL).catch((e) => console.error(e))
+      const allOpenOrders = await binance.futures
+        .openOrders(SYMBOL)
+        .catch((e) => console.error(new Error().stack) || console.error(e))
       const spSide = BOT_SIDE_SIGN < 0 ? 'BUY' : 'SELL'
       const order = _.find(
         allOpenOrders,
@@ -192,7 +204,9 @@ const onPositionUpdate = async () => {
   if (!state.slOrder) {
     await (async () => {
       console.log('getting sl order')
-      const allOpenOrders = await binance.futures.openOrders(SYMBOL).catch((e) => console.error(e))
+      const allOpenOrders = await binance.futures
+        .openOrders(SYMBOL)
+        .catch((e) => console.error(new Error().stack) || console.error(e))
       const slSide = BOT_SIDE_SIGN < 0 ? 'BUY' : 'SELL'
       const order = _.find(
         allOpenOrders,
@@ -234,7 +248,9 @@ const onPositionUpdate = async () => {
   if (minLOrderSize - posSize >= 1 && posSize >= 1) {
     Promise.all(
       state.lOrders.map(({ orderId }) =>
-        binance.futures.cancel(SYMBOL, { orderId }).catch((e) => console.error(e)),
+        binance.futures
+          .cancel(SYMBOL, { orderId })
+          .catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     ).then(async () => {
       console.log('cancelled limit orders')
@@ -292,7 +308,9 @@ const onPositionUpdate = async () => {
     })
     Promise.all(
       state.tpOrders.map(({ orderId }) =>
-        binance.futures.cancel(SYMBOL, { orderId }).catch((e) => console.error(e)),
+        binance.futures
+          .cancel(SYMBOL, { orderId })
+          .catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     ).then(async () => {
       createTpOrders()
@@ -323,7 +341,7 @@ const onPositionUpdate = async () => {
       {
         positionSide: SIDE,
       },
-    ).catch((e) => console.error(e))
+    ).catch((e) => console.error(new Error().stack) || console.error(e))
   }
 
   if (
@@ -358,7 +376,7 @@ const onPositionUpdate = async () => {
       {
         positionSide: SIDE,
       },
-    ).catch((e) => console.error(e))
+    ).catch((e) => console.error(new Error().stack) || console.error(e))
   } else if (
     (state.slOrder && parseFloat(state.slOrder.stopPrice) !== slPrice) ||
     parseFloat(state.slOrder.origQty) !== amount
@@ -372,7 +390,7 @@ const onPositionUpdate = async () => {
     console.log('update sl order', amount, slPrice)
     binance.futures
       .cancel(SYMBOL, { orderId: state.slOrder.orderId })
-      .catch((e) => console.error(e))
+      .catch((e) => console.error(new Error().stack) || console.error(e))
     binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
       SYMBOL,
       Math.abs(amount),
@@ -380,7 +398,7 @@ const onPositionUpdate = async () => {
       {
         positionSide: SIDE,
       },
-    ).catch((e) => console.error(e))
+    ).catch((e) => console.error(new Error().stack) || console.error(e))
     state.slOrder = null
     state.lOrders = []
   }
@@ -395,7 +413,9 @@ const accountUpdate = async (data) => {
   console.log('account update')
   if (data.a.m !== 'ORDER') return
 
-  const positions = await binance.futures.positionRisk().catch((e) => console.error(e))
+  const positions = await binance.futures
+    .positionRisk()
+    .catch((e) => console.error(new Error().stack) || console.error(e))
   const p = _.find(positions, { symbol: SYMBOL, positionSide: SIDE })
   if (parseFloat(p.positionAmt) !== 0) {
     if (!state.position) {
@@ -432,7 +452,9 @@ const userFuturesDataHandler = (data) => {
 
 const getDataStream = async () => {
   console.log('get data stream')
-  const dataStream = await binance.futures.getDataStream().catch((e) => console.error(e))
+  const dataStream = await binance.futures
+    .getDataStream()
+    .catch((e) => console.error(new Error().stack) || console.error(e))
   console.log('listenKey', dataStream.listenKey)
   return dataStream
 }
@@ -448,7 +470,9 @@ const connect = async function reconnect() {
 connect()
 
 const checkPositions = async () => {
-  const positions = await binance.futures.positionRisk().catch((e) => console.error(e))
+  const positions = await binance.futures
+    .positionRisk()
+    .catch((e) => console.error(new Error().stack) || console.error(e))
   const p = _.find(positions, { symbol: SYMBOL, positionSide: SIDE })
   // console.log(p)
   if (p && parseFloat(p.positionAmt) !== 0) {
@@ -463,7 +487,9 @@ const checkPositions = async () => {
   const { pricePrecision, quantityPrecision } = info.symbols.find((item) => item.symbol === SYMBOL)
   state.pricePrecision = pricePrecision
   state.quantityPrecision = quantityPrecision
-  const positions = await binance.futures.positionRisk().catch((e) => console.error(e))
+  const positions = await binance.futures
+    .positionRisk()
+    .catch((e) => console.error(new Error().stack) || console.error(e))
   const p = _.find(positions, { symbol: SYMBOL, positionSide: SIDE })
   // console.log(p)
   if (parseFloat(p.positionAmt) !== 0) {
