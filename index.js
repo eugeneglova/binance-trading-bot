@@ -273,9 +273,10 @@ const onPositionUpdate = async () => {
     })
   }
   if (
-    state.tpOrders.length &&
-    Math.abs(precision(getOrdersAmount(state.tpOrders), state.quantityPrecision)) <
-      Math.abs(precision(parseFloat(p.positionAmt), state.quantityPrecision))
+    !state.tpOrders.length ||
+    (state.tpOrders.length &&
+      Math.abs(precision(getOrdersAmount(state.tpOrders), state.quantityPrecision)) <
+        Math.abs(precision(parseFloat(p.positionAmt), state.quantityPrecision)))
   ) {
     // const maxPrice = getPLPrice(p.entryPrice, TP_PERCENT, BOT_SIDE_SIGN)
     const maxPrice = price
