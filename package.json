@@ -14,7 +14,8 @@
   "dependencies": {
     "config-uncached": "^1.0.2",
     "lodash": "^4.17.20",
-    "node-binance-api-ext": "^2.0.0"
+    "node-binance-api-ext": "^2.0.0",
+    "timestamped-console": "^0.1.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.2"
