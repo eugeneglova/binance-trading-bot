@@ -120,6 +120,7 @@ const createTpOrders = async () => {
     pricePrecision: state.pricePrecision,
     quantityPrecision: state.quantityPrecision,
   })
+  console.log(orders)
   try {
     await Promise.all(
       _.map(orders, (o) =>
@@ -244,8 +245,9 @@ const onPositionUpdate = async () => {
   const minLOrderSize =
     minLOrder && Math.log(Math.abs(minLOrder.origQty) / AMOUNT) / Math.log(2) + 1
   // when pos size less than closest limit order we need update orders
-  // console.log({ minLOrderSize , posSize})
-  if (minLOrderSize - posSize >= 1 && posSize >= 1) {
+  // console.log({ minLOrderSize , posSize, c1: minLOrderSize - posSize })
+  // if (minLOrderSize - posSize >= 1 && posSize >= 1) {
+  if (minLOrderSize - posSize >= 1.7 && posSize >= 1) {
     Promise.all(
       state.lOrders.map(({ orderId }) =>
         binance.futures
@@ -463,6 +465,7 @@ const connect = async function reconnect() {
 connect()
 
 const checkPositions = async () => {
+  await binance.useServerTime()
   const positions = await binance.futures
     .positionRisk()
     .catch((e) => console.error(new Error().stack) || console.error(e))

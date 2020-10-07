@@ -19,23 +19,27 @@ const precision = (value, decimals = getDecimals(value)) =>
 const getPLPrice = (basePrice, plPercent, sideSign) =>
   basePrice + sideSign * (plPercent / 100) * basePrice
 
-const getPLPerc = (basePrice, price, sideSign) =>
-  (price / basePrice - 1) / sideSign * 100
+const getPLPerc = (basePrice, price, sideSign) => ((price / basePrice - 1) / sideSign) * 100
 
-
-const getFullSize = (amount, count) => (
+const getFullSize = (amount, count) =>
   _.range(0, count).reduce((acc, i) => acc * (i ? 2 : 1), amount)
-)
 
-const getNextPrice = (price, i, sideSign, xPrice = [1]) => (
+const getNextPrice = (price, i, sideSign, xPrice = [1]) =>
   price - sideSign * (xPrice[i] || _.last(xPrice))
-)
 
-const getNextAmount = (amount, i, xAmount = [1, 2]) => (
-  amount * (xAmount[i] || _.last(xAmount))
-)
+const getNextAmount = (amount, i, xAmount = [1, 2]) => amount * (xAmount[i] || _.last(xAmount))
 
-const getOrders = ({ price, amount, count, sideSign, start = 0, xPrice = [1], xAmount = [1, 2], pricePrecision, quantityPrecision }) => {
+const getOrders = ({
+  price,
+  amount,
+  count,
+  sideSign,
+  start = 0,
+  xPrice = [1],
+  xAmount = [1, 2],
+  pricePrecision,
+  quantityPrecision,
+}) => {
   const res = _.range(0, count).reduce(
     (acc, i) => {
       // const price = acc.price - sideSign * acc.price * 0.0055 * (i * 0.01 + 1)
@@ -47,7 +51,7 @@ const getOrders = ({ price, amount, count, sideSign, start = 0, xPrice = [1], xA
           price: precision(acc.price, pricePrecision),
           amount: precision(acc.amount, quantityPrecision),
           priceDiff: precision(acc.price - price),
-        }
+        },
       ]
       if (i < start) {
         price = acc.price
@@ -57,10 +61,7 @@ const getOrders = ({ price, amount, count, sideSign, start = 0, xPrice = [1], xA
         ...acc,
         price,
         amount,
-        orders: [
-          ...acc.orders,
-          ...orders,
-        ],
+        orders: [...acc.orders, ...orders],
       }
     },
     { price, amount, orders: [] },
@@ -88,32 +89,45 @@ const getPosSize = (positionAmount, initAmount, count, xAmount = [1, 3, 3, 1.6, 
     xPrice: [1],
     xAmount,
   })
-  const { total, i } = orders.reduce((acc, order, i) => {
-    if (positionAmount <= acc.total) {
-      return acc
-    }
-    return { ...acc, total: acc.total + order.amount, i }
-  }, { total: 0, i: 0 })
+  const { total, i } = orders.reduce(
+    (acc, order, i) => {
+      if (positionAmount <= acc.total) {
+        return acc
+      }
+      return { ...acc, total: acc.total + order.amount, i }
+    },
+    { total: 0, i: 0 },
+  )
   return i + Math.min(positionAmount, total) / Math.max(positionAmount, total)
   // return Math.log(Math.abs(parseFloat(positionAmount)) / initAmount) / Math.log(2) + 1
 }
 
 // console.log(getPosSize(375, 125, 7, [1, 3, 3, 1.6, 1.6, 2]))
 
-const getOrdersAmount = (orders) => (
+const getOrdersAmount = (orders) =>
   _.reduce(orders, (acc, order) => acc + parseFloat(order.origQty), 0)
-)
 
-const getTpOrdersCount = (amount, minAmount, maxOrders = 8) => (
+const getTpOrdersCount = (amount, minAmount, maxOrders = 8) =>
   Math.min(maxOrders, Math.abs(Math.round(amount / minAmount)))
-)
 
-const getTpOrders = ({ basePrice, amount, minAmount, maxPrice, sideSign, maxOrders = 8 }) => {
+const getTpOrders = ({
+  basePrice,
+  amount,
+  minAmount,
+  maxPrice,
+  sideSign,
+  maxOrders = 8,
+  pricePrecision,
+  quantityPrecision,
+}) => {
   const count = getTpOrdersCount(amount, minAmount, maxOrders)
   const interval = Math.abs(basePrice - maxPrice) / count
-  const ordAmount = -sideSign * Math.max(minAmount, Math.abs(amount) / count)
+  const ordAmount = precision(
+    -sideSign * Math.max(minAmount, Math.abs(amount) / count),
+    quantityPrecision,
+  )
   const orders = _.range(0, count).map((i) => {
-    const price = precision(basePrice + (i + 1) * sideSign * interval)
+    const price = precision(basePrice + (i + 1) * sideSign * interval, pricePrecision)
     return { price, amount: ordAmount }
   })
   return orders
