@@ -1,0 +1,16 @@
+{
+  "APIKEY": "",
+  "APISECRET": "",
+  "SYMBOL": "BTCUSDT",
+  "SIDE": "LONG",
+  "MIN_AMOUNT": 0.001,
+  "AMOUNT": 0.002,
+  "X_PRICE": [20, 20, 50, 60, 80, 120],
+  "X_AMOUNT": [1, 3, 3, 1.6, 1.6, 2],
+  "ORDERS": 7,
+  "TP_PERCENT": 0.4,
+  "SP_PERCENT": 0.1,
+  "SP_PERCENT_TRIGGER": 0.2,
+  "SL_PERCENT": -3,
+  "TRADES_TILL_STOP": 1000
+}
