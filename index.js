@@ -63,7 +63,7 @@ const cancelOrders = async () => {
     .catch((e) => console.error(new Error().stack) || console.error(e))
   const orders = _.filter(allOpenOrders, (o) => o.positionSide === SIDE)
   // console.log(orders)
-  return Promise.all(
+  return Promise.allSettled(
     orders.map(({ orderId }) =>
       binance.futures
         .cancel(SYMBOL, { orderId })
@@ -99,7 +99,7 @@ const createOrders = async () => {
         binance.futures[BOT_SIDE_SIGN > 0 ? 'buy' : 'sell'](SYMBOL, Math.abs(o.amount), o.price, {
           positionSide: SIDE,
           postOnly: true,
-        }),
+        }).catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     )
   } catch (e) {
@@ -126,7 +126,7 @@ const createTpOrders = async () => {
       _.map(orders, (o) =>
         binance.futures[BOT_SIDE_SIGN < 0 ? 'buy' : 'sell'](SYMBOL, Math.abs(o.amount), o.price, {
           positionSide: SIDE,
-        }),
+        }).catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     )
   } catch (e) {
@@ -248,7 +248,7 @@ const onPositionUpdate = async () => {
   // console.log({ minLOrderSize , posSize, c1: minLOrderSize - posSize })
   // if (minLOrderSize - posSize >= 1 && posSize >= 1) {
   if (minLOrderSize - posSize >= 1.7 && posSize >= 1) {
-    Promise.all(
+    Promise.allSettled(
       state.lOrders.map(({ orderId }) =>
         binance.futures
           .cancel(SYMBOL, { orderId })
@@ -281,7 +281,7 @@ const onPositionUpdate = async () => {
                 positionSide: SIDE,
                 postOnly: true,
               },
-            ),
+            ).catch((e) => console.error(new Error().stack) || console.error(e)),
           ),
         )
       } catch (e) {
@@ -296,7 +296,7 @@ const onPositionUpdate = async () => {
       Math.abs(precision(getOrdersAmount(state.tpOrders), state.quantityPrecision)) <
         Math.abs(precision(parseFloat(p.positionAmt), state.quantityPrecision)))
   ) {
-    Promise.all(
+    Promise.allSettled(
       state.tpOrders.map(({ orderId }) =>
         binance.futures
           .cancel(SYMBOL, { orderId })
