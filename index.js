@@ -487,6 +487,10 @@ const checkPositions = async () => {
     .positionRisk()
     .catch((e) => console.error(new Error().stack) || console.error(e))
   const p = _.find(positions, { symbol: SYMBOL, positionSide: SIDE })
+  if (!p) {
+    console.error('Please set Position Mode to Hedge Mode')
+    process.exit(0)
+  }
   // console.log(p)
   if (parseFloat(p.positionAmt) !== 0) {
     state.position = p

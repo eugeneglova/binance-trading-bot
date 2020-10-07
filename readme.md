@@ -1,4 +1,4 @@
-# Binance Trading Bot
+# Binance Futures Auto Trading Bot
 
 To run just download and install [Node.js](https://nodejs.org/)
 
@@ -7,6 +7,10 @@ To run just download and install [Node.js](https://nodejs.org/)
 ```sh
 npm install
 ```
+
+## Set up Binance Futures Position Mode
+
+Make sure you set Position Mode to Hedge Mode on your Binance Futures account.
 
 ## Set up configuration file
 
