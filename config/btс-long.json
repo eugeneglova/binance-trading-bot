@@ -1,6 +1,4 @@
 {
-  "APIKEY": "",
-  "APISECRET": "",
   "SYMBOL": "BTCUSDT",
   "SIDE": "LONG",
   "MIN_AMOUNT": 0.001,

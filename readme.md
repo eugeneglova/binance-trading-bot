@@ -14,7 +14,7 @@ Make sure you set Position Mode to Hedge Mode on your Binance Futures account.
 
 ## Set up configuration file
 
-Open `settings.btc-example.json` file and add your API keys
+Open `config/default.json` file and add your API keys
 
 ```sh
   "APIKEY": "",
@@ -23,13 +23,17 @@ Open `settings.btc-example.json` file and add your API keys
 
 ## Run bot
 
-To start trading just run this
+To start `BTCUSDT` `LONG` trading just run this
 
 ```sh
-npm run btc-example
+npm run btc-long
 ```
 
-# Settings
+you can use also `npm run btc-short`, `npm run eth-long` or `npm run eth-short`
+
+All settings could be found in `config/btc-long.json`, `config/btc-short.json` etc.
+
+# Configuration settings
 
 * `APIKEY` - API key for your binance futures account
 * `APISECRET` - API secret for your binance futures account

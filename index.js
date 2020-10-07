@@ -1,6 +1,6 @@
 const Binance = require('node-binance-api-ext')
 const _ = require('lodash')
-const importFresh = require('import-fresh')
+const config = require('config-uncached')
 
 const {
   precision,
@@ -28,19 +28,19 @@ let {
   SP_PERCENT_TRIGGER,
   SL_PERCENT,
   TRADES_TILL_STOP,
-} = require(`./${process.env.BINANCE_SETTINGS}`)
+} = config(true)
 
 setInterval(() => {
-  const settings = importFresh(`./${process.env.BINANCE_SETTINGS}`)
-  AMOUNT = settings.AMOUNT
-  X_PRICE = settings.X_PRICE
-  X_AMOUNT = settings.X_AMOUNT
-  ORDERS = settings.ORDERS
-  TP_PERCENT = settings.TP_PERCENT
-  SP_PERCENT = settings.SP_PERCENT
-  SP_PERCENT_TRIGGER = settings.SP_PERCENT_TRIGGER
-  SL_PERCENT = settings.SL_PERCENT
-  TRADES_TILL_STOP = settings.TRADES_TILL_STOP
+  const cfg = config(true)
+  AMOUNT = cfg.AMOUNT
+  X_PRICE = cfg.X_PRICE
+  X_AMOUNT = cfg.X_AMOUNT
+  ORDERS = cfg.ORDERS
+  TP_PERCENT = cfg.TP_PERCENT
+  SP_PERCENT = cfg.SP_PERCENT
+  SP_PERCENT_TRIGGER = cfg.SP_PERCENT_TRIGGER
+  SL_PERCENT = cfg.SL_PERCENT
+  TRADES_TILL_STOP = cfg.TRADES_TILL_STOP
 }, 10 * 1000)
 
 const BOT_SIDE_SIGN = SIDE === 'SHORT' ? -1 : 1

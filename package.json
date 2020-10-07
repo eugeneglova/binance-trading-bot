@@ -4,18 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "btc-example": "BINANCE_SETTINGS=settings.btc-example.json node .",
-    "eth-example": "BINANCE_SETTINGS=settings.eth-example.json node .",
-    "btc-short": "BINANCE_SETTINGS=settings.btс-short.json node .",
-    "btc-long": "BINANCE_SETTINGS=settings.btс-long.json node .",
-    "eth-long": "BINANCE_SETTINGS=settings.eth-long.json node .",
-    "eth-short": "BINANCE_SETTINGS=settings.eth-short.json node ."
+    "btc-long": "cross-env NODE_ENV=btс-long node .",
+    "btc-short": "cross-env NODE_ENV=btс-short node .",
+    "eth-long": "cross-env NODE_ENV=eth-long node .",
+    "eth-short": "cross-env NODE_ENV=eth-short node ."
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "import-fresh": "^3.2.1",
+    "config-uncached": "^1.0.2",
     "lodash": "^4.17.20",
     "node-binance-api-ext": "^2.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.2"
   }
 }

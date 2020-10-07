@@ -1,8 +1,6 @@
 {
-  "APIKEY": "",
-  "APISECRET": "",
   "SYMBOL": "ETHUSDT",
-  "SIDE": "SHORT",
+  "SIDE": "LONG",
   "MIN_AMOUNT": 0.001,
   "AMOUNT": 0.002,
   "X_PRICE": [2.36],

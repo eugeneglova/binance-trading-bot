@@ -1,0 +1,14 @@
+{
+  "SYMBOL": "ETHUSDT",
+  "SIDE": "SHORT",
+  "MIN_AMOUNT": 0.001,
+  "AMOUNT": 0.002,
+  "X_PRICE": [2.36],
+  "X_AMOUNT": [1, 2],
+  "ORDERS": 8,
+  "TP_PERCENT": 2,
+  "SP_PERCENT": 0.15,
+  "SP_PERCENT_TRIGGER": 0.3,
+  "SL_PERCENT": -3,
+  "TRADES_TILL_STOP": 1000
+}
