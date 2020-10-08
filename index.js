@@ -94,18 +94,14 @@ const createOrders = async () => {
   console.log(orders)
   console.log('create orders')
   // process.exit(0)
-  try {
-    await Promise.all(
-      _.map(orders, (o) =>
-        binance.futures[BOT_SIDE_SIGN > 0 ? 'buy' : 'sell'](SYMBOL, Math.abs(o.amount), o.price, {
-          positionSide: SIDE,
-          postOnly: true,
-        }).catch((e) => console.error(new Error().stack) || console.error(e)),
-      ),
-    )
-  } catch (e) {
-    console.error(e)
-  }
+  await Promise.allSettled(
+    _.map(orders, (o) =>
+      binance.futures[BOT_SIDE_SIGN > 0 ? 'buy' : 'sell'](SYMBOL, Math.abs(o.amount), o.price, {
+        positionSide: SIDE,
+        postOnly: true,
+      }).catch((e) => console.error(new Error().stack) || console.error(e)),
+    ),
+  )
 }
 
 const createTpOrders = async () => {
@@ -122,17 +118,14 @@ const createTpOrders = async () => {
     quantityPrecision: state.quantityPrecision,
   })
   console.log(orders)
-  try {
-    await Promise.all(
-      _.map(orders, (o) =>
-        binance.futures[BOT_SIDE_SIGN < 0 ? 'buy' : 'sell'](SYMBOL, Math.abs(o.amount), o.price, {
-          positionSide: SIDE,
-        }).catch((e) => console.error(new Error().stack) || console.error(e)),
-      ),
-    )
-  } catch (e) {
-    console.error(e)
-  }
+  console.log('create tp orders')
+  await Promise.allSettled(
+    _.map(orders, (o) =>
+      binance.futures[BOT_SIDE_SIGN < 0 ? 'buy' : 'sell'](SYMBOL, Math.abs(o.amount), o.price, {
+        positionSide: SIDE,
+      }).catch((e) => console.error(new Error().stack) || console.error(e)),
+    ),
+  )
 }
 
 const onPositionNew = () => {
