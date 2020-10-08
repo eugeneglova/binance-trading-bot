@@ -242,7 +242,7 @@ const onPositionUpdate = async () => {
   // console.log({ minLOrderSize , posSize, c1: minLOrderSize - posSize })
   // if (minLOrderSize - posSize >= 1 && posSize >= 1) {
   if (minLOrderSize - posSize >= 1.7 && posSize >= 1) {
-    Promise.allSettled(
+    await Promise.allSettled(
       state.lOrders.map(({ orderId }) =>
         binance.futures
           .cancel(SYMBOL, { orderId })
@@ -264,23 +264,14 @@ const onPositionUpdate = async () => {
       })
       orders.shift()
       console.log('create orders')
-      try {
-        await Promise.all(
-          _.map(orders, (o) =>
-            binance.futures[BOT_SIDE_SIGN > 0 ? 'buy' : 'sell'](
-              SYMBOL,
-              Math.abs(o.amount),
-              o.price,
-              {
-                positionSide: SIDE,
-                postOnly: true,
-              },
-            ).catch((e) => console.error(new Error().stack) || console.error(e)),
-          ),
-        )
-      } catch (e) {
-        console.error(e)
-      }
+      await Promise.all(
+        _.map(orders, (o) =>
+          binance.futures[BOT_SIDE_SIGN > 0 ? 'buy' : 'sell'](SYMBOL, Math.abs(o.amount), o.price, {
+            positionSide: SIDE,
+            postOnly: true,
+          }).catch((e) => console.error(new Error().stack) || console.error(e)),
+        ),
+      )
       state.lOrders = []
     })
   }
@@ -290,17 +281,16 @@ const onPositionUpdate = async () => {
       Math.abs(precision(getOrdersAmount(state.tpOrders), state.quantityPrecision)) <
         Math.abs(precision(parseFloat(p.positionAmt), state.quantityPrecision)))
   ) {
-    Promise.allSettled(
+    await Promise.allSettled(
       state.tpOrders.map(({ orderId }) =>
         binance.futures
           .cancel(SYMBOL, { orderId })
           .catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
-    ).then(async () => {
-      await createTpOrders()
-      state.tpOrders = []
-      state.lOrders = []
-    })
+    )
+    await createTpOrders()
+    state.tpOrders = []
+    state.lOrders = []
   }
 
   console.log(
@@ -318,7 +308,7 @@ const onPositionUpdate = async () => {
   }
   if (!state.spOrder && diff > 0) {
     console.log('create sp order', { spPrice, amount })
-    binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
+    await binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
       SYMBOL,
       Math.abs(amount),
       spPrice,
@@ -353,7 +343,7 @@ const onPositionUpdate = async () => {
   )
   if (!state.slOrder) {
     console.log('create sl order', amount, slPrice)
-    binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
+    await binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
       SYMBOL,
       Math.abs(amount),
       slPrice,
@@ -373,7 +363,7 @@ const onPositionUpdate = async () => {
       a1: amount,
     })
     console.log('update sl order', amount, slPrice)
-    binance.futures
+    await binance.futures
       .cancel(SYMBOL, { orderId: state.slOrder.orderId })
       .catch((e) => console.error(new Error().stack) || console.error(e))
     binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
