@@ -69,14 +69,17 @@ const getOrders = ({
   return res.orders
 }
 
-// console.log(getOrders({
-//   price: 10481,
-//   amount: 125,
+// const x = getOrders({
+//   price: 11350,
+//   amount: 0.005,
 //   count: 7,
-//   sideSign: 1,
+//   sideSign: -1,
 //   xPrice: [20, 20, 50, 60, 80, 120],
 //   xAmount: [1, 3, 3, 1.6, 1.6, 2],
-// }))
+// })
+// console.log(x, x.reduce((acc, o) => {
+//   return acc + parseFloat(o.amount)
+// }, 0))
 // console.log(getOrders(336.757421875, -0.04, 8, -1, 6))
 // console.log(getOrders(336.757421875, 0.04, 8, 1, 6))
 
