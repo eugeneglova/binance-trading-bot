@@ -1,9 +1,9 @@
 const Binance = require('node-binance-api-ext')
 const _ = require('lodash')
-const config = require('config-uncached')
 const console = require('timestamped-console')('yyyy-mm-dd HH:MM:ss')
 
 const {
+  lsGet,
   precision,
   getPLPrice,
   getPLPerc,
@@ -21,30 +21,31 @@ let {
   SIDE,
   MIN_AMOUNT,
   AMOUNT,
+  GRID,
   X_PRICE,
   X_AMOUNT,
-  ORDERS,
   TP_PERCENT,
   SP_PERCENT,
   SP_PERCENT_TRIGGER,
   SL_PERCENT,
   TRADES_TILL_STOP,
-} = config(true)
+} = lsGet('config')
+
+let BOT_SIDE_SIGN = SIDE === 'SHORT' ? -1 : 1
 
 setInterval(() => {
-  const cfg = config(true)
+  const cfg = lsGet('config')
   AMOUNT = cfg.AMOUNT
+  GRID = cfg.GRID
   X_PRICE = cfg.X_PRICE
   X_AMOUNT = cfg.X_AMOUNT
-  ORDERS = cfg.ORDERS
   TP_PERCENT = cfg.TP_PERCENT
   SP_PERCENT = cfg.SP_PERCENT
   SP_PERCENT_TRIGGER = cfg.SP_PERCENT_TRIGGER
   SL_PERCENT = cfg.SL_PERCENT
   TRADES_TILL_STOP = cfg.TRADES_TILL_STOP
+  BOT_SIDE_SIGN = SIDE === 'SHORT' ? -1 : 1
 }, 10 * 1000)
-
-const BOT_SIDE_SIGN = SIDE === 'SHORT' ? -1 : 1
 
 const state = {
   lOrders: [],
@@ -52,11 +53,6 @@ const state = {
   slOrder: null,
   tradesCount: 0,
 }
-
-const binance = Binance({
-  APIKEY,
-  APISECRET,
-})
 
 const cancelOrders = async () => {
   const allOpenOrders = await binance.futures
@@ -84,7 +80,7 @@ const createOrders = async () => {
   const orders = getOrders({
     price,
     amount,
-    count: ORDERS,
+    count: GRID.length + 1,
     sideSign: BOT_SIDE_SIGN,
     xPrice: X_PRICE,
     xAmount: X_AMOUNT,
@@ -113,7 +109,7 @@ const createTpOrders = async () => {
     minAmount: MIN_AMOUNT,
     maxPrice,
     sideSign: BOT_SIDE_SIGN,
-    maxOrders: ORDERS,
+    maxOrders: GRID.length + 1,
     pricePrecision: state.pricePrecision,
     quantityPrecision: state.quantityPrecision,
   })
@@ -225,7 +221,7 @@ const onPositionUpdate = async () => {
   )
 
   // const posSize = Math.log(Math.abs(parseFloat(p.positionAmt)) / AMOUNT) / Math.log(2) + 1
-  const posSize = getPosSize(parseFloat(p.positionAmt), AMOUNT, ORDERS, X_AMOUNT)
+  const posSize = getPosSize(parseFloat(p.positionAmt), AMOUNT, GRID.length + 1, X_AMOUNT)
   // make tp closer to base price to minimize risks after 3rd order
   const numOfRiskOrders = 3
   const tpDistanceCoefficient = posSize > numOfRiskOrders ? 1 / (posSize - numOfRiskOrders / 2) : 1
@@ -254,7 +250,7 @@ const onPositionUpdate = async () => {
       const orders = getOrders({
         price: p.entryPrice,
         amount,
-        count: ORDERS,
+        count: GRID.length + 1,
         sideSign: BOT_SIDE_SIGN,
         start: Math.ceil(posSize) - 1,
         xPrice: X_PRICE,
@@ -437,16 +433,6 @@ const getDataStream = async () => {
   console.log('listenKey', dataStream.listenKey)
   return dataStream
 }
-setInterval(() => {
-  console.log('keep alive')
-  getDataStream()
-}, 59 * 60 * 1000)
-const connect = async function reconnect() {
-  console.log('connect')
-  const { listenKey } = await getDataStream()
-  binance.webSocket.futuresSubscribeSingle(listenKey, userFuturesDataHandler, reconnect)
-}
-connect()
 
 const checkPositions = async () => {
   await binance.useServerTime()
@@ -461,9 +447,32 @@ const checkPositions = async () => {
   }
 }
 
-const run = async () => {
+let keepAliveIntervalId
+let checkPositionsIntervalId
+let createOrdersIntervalId
+let binance
+let connect
+const start = async () => {
+  binance = Binance({
+    APIKEY,
+    APISECRET,
+  })
+
   await binance.useServerTime()
   const info = await binance.futures.exchangeInfo()
+
+  keepAliveIntervalId = setInterval(() => {
+    console.log('keep alive')
+    getDataStream()
+  }, 59 * 60 * 1000)
+
+  connect = async function reconnect() {
+    console.log('connect')
+    const { listenKey } = await getDataStream()
+    binance.webSocket.futuresSubscribeSingle(listenKey, userFuturesDataHandler, reconnect)
+  }
+  connect()
+
   const { pricePrecision, quantityPrecision } = info.symbols.find((item) => item.symbol === SYMBOL)
   state.pricePrecision = pricePrecision
   state.quantityPrecision = quantityPrecision
@@ -482,13 +491,30 @@ const run = async () => {
     await cancelOrders()
     createOrders()
   }
-  setInterval(() => checkPositions(), 15 * 1000)
+  checkPositionsIntervalId = setInterval(() => checkPositions(), 15 * 1000)
   checkPositions()
 
-  setInterval(async () => {
+  createOrdersIntervalId = setInterval(async () => {
     if (state.position || state.tradesCount >= TRADES_TILL_STOP) return
     console.log('create orders by position timeout')
     await cancelOrders()
     createOrders()
   }, 2 * 60 * 1000)
+}
+
+const stop = async () => {
+  state.lOrders = []
+  state.tpOrders = []
+  state.slOrder = null
+  clearInterval(keepAliveIntervalId)
+  clearInterval(checkPositionsIntervalId)
+  clearInterval(createOrdersIntervalId)
+  console.log('disconnect')
+  const { listenKey } = await getDataStream()
+  binance.webSocket.futuresTerminate(listenKey)
+}
+
+module.exports = {
+  start,
+  stop,
 }

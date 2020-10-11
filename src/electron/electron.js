@@ -1,12 +1,11 @@
 const electron = require('electron');
-const _ = require('lodash')
 const { LocalStorage } = require('node-localstorage')
+
+const { lsGet, lsSet } = require('./functions')
+
 global.localStorage = new LocalStorage('./data')
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
-
-const lsGet = (key) => JSON.parse(localStorage.getItem(key) || 'null')
-const lsSet = (key, value) => localStorage.setItem(key, _.isString(value) ? value : JSON.stringify(value))
 
 const { ipcMain } = electron
 ipcMain.on('getConfig', (event) => {
