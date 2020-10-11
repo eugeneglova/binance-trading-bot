@@ -2,18 +2,47 @@ const electron = require('electron');
 const { LocalStorage } = require('node-localstorage')
 
 const { lsGet, lsSet } = require('./functions')
+const start = require('./bot')
 
 global.localStorage = new LocalStorage('./data')
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
 const { ipcMain } = electron
+
 ipcMain.on('getConfig', (event) => {
-  event.returnValue = lsGet('config')
+  const config = lsGet('config')
+  const defaultConfig = {
+    SIDE: 'LONG',
+    AMOUNT: 0.002,
+    GRID: [
+      { PRICE_STEP: 20, X_AMOUNT: 1 },
+      { PRICE_STEP: 20, X_AMOUNT: 3 },
+      { PRICE_STEP: 50, X_AMOUNT: 3 },
+      { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+      { PRICE_STEP: 80, X_AMOUNT: 1.6 },
+      { PRICE_STEP: 120, X_AMOUNT: 2 },
+    ],
+    TP_PERCENT: 0.4,
+    SP_PERCENT: 0.1,
+    SP_PERCENT_TRIGGER: 0.2,
+    SL_PERCENT: -3,
+    TRADES_TILL_STOP: 1000,
+    SYMBOL: 'BTCUSDT',
+  }
+  event.returnValue = { ...defaultConfig, ...config }
 })
 
 ipcMain.on('setConfig', (event, value) => {
   lsSet('config', value)
+})
+
+let stop
+ipcMain.on('start', () => {
+  stop = start()
+})
+ipcMain.on('stop', () => {
+  stop && stop()
 })
 
 const path = require('path');
