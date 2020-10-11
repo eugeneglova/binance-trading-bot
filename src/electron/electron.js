@@ -38,8 +38,8 @@ ipcMain.on('setConfig', (event, value) => {
 })
 
 let stop
-ipcMain.on('start', () => {
-  stop = start()
+ipcMain.on('start', async () => {
+  stop = await start()
 })
 ipcMain.on('stop', () => {
   stop && stop()
