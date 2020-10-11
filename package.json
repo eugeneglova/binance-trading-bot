@@ -18,10 +18,10 @@
     "timestamped-console": "^0.1.0"
   },
   "scripts": {
-    "btc-long": "cross-env NODE_ENV=btс-long node .",
-    "btc-short": "cross-env NODE_ENV=btс-short node .",
-    "eth-long": "cross-env NODE_ENV=eth-long node .",
-    "eth-short": "cross-env NODE_ENV=eth-short node .",
+    "btc-long": "cross-env NODE_ENV=btс-long node index.js",
+    "btc-short": "cross-env NODE_ENV=btс-short node index.js",
+    "eth-long": "cross-env NODE_ENV=eth-long node index.js",
+    "eth-short": "cross-env NODE_ENV=eth-short node index.js",
     "electron-dev": "concurrently \"PORT=3009 BROWSER=none npm run start\" \"wait-on http://localhost:3009 && electron .\"",
     "start": "rescripts start",
     "build": "rescripts build",
