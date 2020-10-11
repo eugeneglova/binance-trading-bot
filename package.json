@@ -72,7 +72,12 @@
     "mac": {
       "category": "public.app-category.utilities"
     },
+    "extends": null,
+    "extraMetadata": {
+      "main": "src/electron/electron.js"
+    },
     "files": [
+      "src/**/*",
       "build/**/*",
       "node_modules/**/*"
     ],
