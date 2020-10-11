@@ -4,7 +4,7 @@ const { LocalStorage } = require('node-localstorage')
 const { lsGet, lsSet } = require('./functions')
 const start = require('./bot')
 
-global.localStorage = new LocalStorage('./data')
+global.localStorage = new LocalStorage(`${electron.app.getPath('userData')}`)
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
@@ -58,7 +58,7 @@ function createWindow() {
       nodeIntegration: true
     }
   });
-  mainWindow.loadURL(isDev ? 'http://localhost:3009' : `file://${path.join(__dirname, '../build/index.html')}`);
+  mainWindow.loadURL(isDev ? 'http://localhost:3009' : `file://${path.join(__dirname, '../../build/index.html')}`);
   if (isDev) {
     // Open the DevTools.
     //BrowserWindow.addDevToolsExtension('<location to your react chrome extension>');
