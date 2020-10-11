@@ -4,46 +4,9 @@ const { LocalStorage } = require('node-localstorage')
 const { lsGet, lsSet } = require('./functions')
 const start = require('./bot')
 
-global.localStorage = new LocalStorage(`${electron.app.getPath('userData')}`)
 const app = electron.app;
+global.localStorage = new LocalStorage(`${app.getPath('userData')}`)
 const BrowserWindow = electron.BrowserWindow;
-
-const { ipcMain } = electron
-
-ipcMain.on('getConfig', (event) => {
-  const config = lsGet('config')
-  const defaultConfig = {
-    SIDE: 'LONG',
-    AMOUNT: 0.002,
-    GRID: [
-      { PRICE_STEP: 20, X_AMOUNT: 1 },
-      { PRICE_STEP: 20, X_AMOUNT: 3 },
-      { PRICE_STEP: 50, X_AMOUNT: 3 },
-      { PRICE_STEP: 60, X_AMOUNT: 1.6 },
-      { PRICE_STEP: 80, X_AMOUNT: 1.6 },
-      { PRICE_STEP: 120, X_AMOUNT: 2 },
-    ],
-    TP_PERCENT: 0.4,
-    SP_PERCENT: 0.1,
-    SP_PERCENT_TRIGGER: 0.2,
-    SL_PERCENT: -3,
-    TRADES_TILL_STOP: 1000,
-    SYMBOL: 'BTCUSDT',
-  }
-  event.returnValue = { ...defaultConfig, ...config }
-})
-
-ipcMain.on('setConfig', (event, value) => {
-  lsSet('config', value)
-})
-
-let stop
-ipcMain.on('start', async () => {
-  stop = await start()
-})
-ipcMain.on('stop', () => {
-  stop && stop()
-})
 
 const path = require('path');
 const isDev = require('electron-is-dev');
@@ -80,3 +43,50 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+// communication
+const { ipcMain } = electron
+
+ipcMain.on('getConfig', (event) => {
+  const config = lsGet('config')
+  const defaultConfig = {
+    SIDE: 'LONG',
+    AMOUNT: 0.002,
+    GRID: [
+      { PRICE_STEP: 20, X_AMOUNT: 1 },
+      { PRICE_STEP: 20, X_AMOUNT: 3 },
+      { PRICE_STEP: 50, X_AMOUNT: 3 },
+      { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+      { PRICE_STEP: 80, X_AMOUNT: 1.6 },
+      { PRICE_STEP: 120, X_AMOUNT: 2 },
+    ],
+    TP_PERCENT: 0.4,
+    SP_PERCENT: 0.1,
+    SP_PERCENT_TRIGGER: 0.2,
+    SL_PERCENT: -3,
+    TRADES_TILL_STOP: 1000,
+    SYMBOL: 'BTCUSDT',
+  }
+  event.returnValue = { ...defaultConfig, ...config }
+})
+
+ipcMain.on('setConfig', (event, value) => {
+  lsSet('config', value)
+})
+
+let stop
+let isRunning
+ipcMain.on('start', async (event) => {
+  stop = await start()
+  isRunning = true
+  event.reply('onChangeIsRunning', isRunning)
+})
+ipcMain.on('stop', (event) => {
+  stop && stop()
+  isRunning = false
+  event.reply('onChangeIsRunning', isRunning)
+})
+
+ipcMain.on('getIsRunning', (event) => {
+  event.returnValue = isRunning
+})

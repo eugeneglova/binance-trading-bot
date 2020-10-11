@@ -13,10 +13,13 @@ const { Header, Content, Footer } = Layout
 
 function App() {
   const [config, setConfig] = useState()
+  const [isRunning, setIsRunning] = useState()
   const [page, setPage] = useState('settings')
 
   useEffect(() => {
     setConfig(ipcRenderer.sendSync('getConfig'))
+    setIsRunning(ipcRenderer.sendSync('getIsRunning'))
+    ipcRenderer.on('onChangeIsRunning', (event, value) => setIsRunning(JSON.parse(value)))
   }, [])
 
   return (
@@ -53,6 +56,7 @@ function App() {
           {config && page === 'trading' && (
             <Trading
               config={config}
+              isRunning={isRunning}
               onStart={() => {
                 ipcRenderer.send('start')
               }}

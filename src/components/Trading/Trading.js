@@ -1,17 +1,15 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Button } from 'antd'
 
-const Trading = ({ onStart, onStop }) => {
-  const [isStarted, setIsStarted] = useState(false)
+const Trading = ({ isRunning, onStart, onStop }) => {
   return (
     <div>
       <Button
         type="primary"
         onClick={() => {
-          setIsStarted(true)
           onStart()
         }}
-        disabled={isStarted}
+        disabled={isRunning}
       >
         Start
       </Button>
@@ -19,9 +17,8 @@ const Trading = ({ onStart, onStop }) => {
         type="primary"
         onClick={() => {
           onStop()
-          setIsStarted(false)
         }}
-        disabled={!isStarted}
+        disabled={!isRunning}
       >
         Stop
       </Button>
