@@ -2,7 +2,7 @@
   "name": "binance-trading-bot",
   "version": "1.1.0",
   "description": "Binance Trading Bot",
-  "main": "public/electron.js",
+  "main": "src/electron/electron.js",
   "homepage": "./",
   "dependencies": {
     "@ant-design/icons": "^4.2.2",
