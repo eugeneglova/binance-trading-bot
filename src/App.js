@@ -3,6 +3,7 @@ import { Layout, Menu, Breadcrumb } from 'antd'
 import { ipcRenderer } from 'electron'
 
 import Settings from './components/Settings'
+import Trading from './components/Trading'
 
 // ipcRenderer.on('asynchronous-reply', (event, arg) => {
 //   console.log(arg) // prints "pong"
@@ -22,7 +23,12 @@ function App() {
     <Layout className="layout">
       <Header>
         <div className="logo" />
-        <Menu theme="dark" mode="horizontal" defaultSelectedKeys={[page]}>
+        <Menu
+          theme="dark"
+          mode="horizontal"
+          defaultSelectedKeys={[page]}
+          onSelect={({ key }) => setPage(key)}
+        >
           <Menu.Item key="settings">Settings</Menu.Item>
           <Menu.Item key="trading">Trading</Menu.Item>
         </Menu>
@@ -41,6 +47,17 @@ function App() {
                 const mergedValues = { ...config, ...values }
                 ipcRenderer.send('setConfig', JSON.stringify(mergedValues))
                 setConfig(mergedValues)
+              }}
+            />
+          )}
+          {config && page === 'trading' && (
+            <Trading
+              config={config}
+              onStart={() => {
+                ipcRenderer.send('start')
+              }}
+              onStop={() => {
+                ipcRenderer.send('stop')
               }}
             />
           )}
