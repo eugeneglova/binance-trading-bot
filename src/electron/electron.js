@@ -77,9 +77,9 @@ ipcMain.on('setConfig', (event, value) => {
 let stop
 let isRunning
 ipcMain.on('start', async (event) => {
-  stop = await start()
   isRunning = true
   event.reply('onChangeIsRunning', isRunning)
+  stop = await start()
 })
 ipcMain.on('stop', (event) => {
   stop && stop()
