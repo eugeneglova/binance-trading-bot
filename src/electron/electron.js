@@ -1,8 +1,11 @@
 const electron = require('electron');
 const { LocalStorage } = require('node-localstorage')
+const log = require('electron-log')
 
 const { lsGet, lsSet } = require('./functions')
 const start = require('./bot')
+
+Object.assign(console, log.functions)
 
 const app = electron.app;
 global.localStorage = new LocalStorage(`${app.getPath('userData')}`)

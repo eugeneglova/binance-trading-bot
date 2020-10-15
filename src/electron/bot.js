@@ -1,6 +1,5 @@
 const Binance = require('node-binance-api-ext')
 const _ = require('lodash')
-const console = require('timestamped-console')('yyyy-mm-dd HH:MM:ss')
 
 const {
   lsGet,

@@ -12,13 +12,13 @@
     "antd": "^4.7.0",
     "config-uncached": "^1.0.2",
     "electron-is-dev": "^1.2.0",
+    "electron-log": "^4.2.4",
     "lodash": "^4.17.20",
     "node-binance-api-ext": "^2.0.0",
     "node-localstorage": "^2.1.6",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.3",
-    "timestamped-console": "^0.1.0"
+    "react-scripts": "3.4.3"
   },
   "scripts": {
     "btc-long": "cross-env NODE_ENV=btс-long node index.js",
