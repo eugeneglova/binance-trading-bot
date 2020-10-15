@@ -1,5 +1,4 @@
 const electron = require('electron');
-const { LocalStorage } = require('node-localstorage')
 const log = require('electron-log')
 const Store = require('electron-store')
 
@@ -33,7 +32,6 @@ new Store({
 })
 
 const app = electron.app;
-global.localStorage = new LocalStorage(`${app.getPath('userData')}`)
 const BrowserWindow = electron.BrowserWindow;
 
 const path = require('path');
