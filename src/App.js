@@ -2,25 +2,20 @@ import React, { useState, useEffect } from 'react'
 import { Layout, Menu, Breadcrumb } from 'antd'
 import { ipcRenderer } from 'electron'
 
+import Test from './components/Test'
+import ApiKeys from './components/ApiKeys'
 import Settings from './components/Settings'
 import Trading from './components/Trading'
-
-// ipcRenderer.on('asynchronous-reply', (event, arg) => {
-//   console.log(arg) // prints "pong"
-// })
 
 const { Header, Content, Footer } = Layout
 
 function App() {
-  const [config, setConfig] = useState()
   const [isRunning, setIsRunning] = useState()
-  const [page, setPage] = useState('settings')
+  const [page, setPage] = useState('trading')
 
   useEffect(() => {
-    setConfig(ipcRenderer.sendSync('getConfig'))
     setIsRunning(ipcRenderer.sendSync('getIsRunning'))
     ipcRenderer.on('onChangeIsRunning', (event, value) => setIsRunning(JSON.parse(value)))
-    ipcRenderer.on('onChangeConfig', () => setConfig(ipcRenderer.sendSync('getConfig')))
   }, [])
 
   return (
@@ -33,8 +28,10 @@ function App() {
           defaultSelectedKeys={[page]}
           onSelect={({ key }) => setPage(key)}
         >
-          <Menu.Item key="settings">Settings</Menu.Item>
           <Menu.Item key="trading">Trading</Menu.Item>
+          <Menu.Item key="settings">Settings</Menu.Item>
+          <Menu.Item key="apikeys">Api Keys</Menu.Item>
+          <Menu.Item key="test">Test</Menu.Item>
         </Menu>
       </Header>
       <Content style={{ padding: '0 50px' }}>
@@ -44,19 +41,17 @@ function App() {
           <Breadcrumb.Item>App</Breadcrumb.Item>
         </Breadcrumb>
         <div className="site-layout-content">
-          {config && page === 'settings' && (
-            <Settings
-              config={config}
-              onSuccess={(values) => {
-                const mergedValues = { ...config, ...values }
-                ipcRenderer.send('setConfig', JSON.stringify(mergedValues))
-                setConfig(mergedValues)
-              }}
-            />
+          {page === 'test' && (
+            <Test />
           )}
-          {config && page === 'trading' && (
+          {page === 'apikeys' && (
+            <ApiKeys />
+          )}
+          {page === 'settings' && (
+            <Settings />
+          )}
+          {page === 'trading' && (
             <Trading
-              config={config}
               isRunning={isRunning}
               onStart={() => {
                 ipcRenderer.send('start')

@@ -1,8 +1,7 @@
 import React from 'react'
-// import _ from 'lodash'
 import { Form, Input, Button, Select, Space } from 'antd'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
-// import { getOrders } from '../../functions'
+import Store from 'electron-store'
 
 const { Option } = Select
 
@@ -21,32 +20,18 @@ const tailLayout = {
   },
 }
 
-const Main = ({ config, onSuccess }) => {
+const Main = ({ onSuccess }) => {
+  const store = new Store()
+  const config = store.get()
+
   const onFinish = (values) => {
     console.log('Success:', values)
-    onSuccess(values)
+    store.set(values)
   }
 
   const onFinishFailed = (errorInfo) => {
     console.log('Failed:', errorInfo)
   }
-
-  // const price = 10000
-
-  // const onValuesChange = (changedValues, allValues) => {
-  //   console.log({ changedValues, allValues })
-  //   const orders = getOrders({
-  //     price,
-  //     amount: config.AMOUNT,
-  //     count: config.X_PRICE.length + 1,
-  //     sideSign: config.AMOUNT,
-  //     start: 0,
-  //     xPrice: [1],
-  //     xAmount: [1, 2],
-  //     pricePrecision: 2,
-  //     quantityPrecision: 3,
-  //   })
-  // }
 
   return (
     <Form
@@ -55,34 +40,7 @@ const Main = ({ config, onSuccess }) => {
       initialValues={config}
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
-      // onValuesChange={onValuesChange}
     >
-      <Form.Item
-        label="API Key"
-        name="APIKEY"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your API Key!',
-          },
-        ]}
-      >
-        <Input type="password" />
-      </Form.Item>
-
-      <Form.Item
-        label="API Secret"
-        name="APISECRET"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your API Secret!',
-          },
-        ]}
-      >
-        <Input type="password" />
-      </Form.Item>
-
       <Form.Item
         label="Symbol"
         name="SYMBOL"

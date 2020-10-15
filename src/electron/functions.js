@@ -1,9 +1,5 @@
 const _ = require('lodash')
 
-const lsGet = (key) => JSON.parse(localStorage.getItem(key) || 'null')
-const lsSet = (key, value) =>
-  localStorage.setItem(key, _.isString(value) ? value : JSON.stringify(value))
-
 const getDecimals = (value) => {
   const absValue = Math.abs(value)
   if (absValue < 0.0005) return 6
@@ -181,8 +177,6 @@ const getTpOrders = ({
 // }))
 
 module.exports = {
-  lsGet,
-  lsSet,
   getDecimals,
   precision,
   getPLPrice,

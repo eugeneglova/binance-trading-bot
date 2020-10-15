@@ -1,9 +1,8 @@
 const Binance = require('node-binance-api-ext')
+const Store = require('electron-store')
 const _ = require('lodash')
 
 const {
-  lsGet,
-  lsSet,
   precision,
   getPLPrice,
   getPLPerc,
@@ -15,11 +14,12 @@ const {
 } = require('./functions')
 
 const start = async (contents) => {
-  let config = lsGet('config')
+  const store = new Store()
+  let config = store.get()
   let BOT_SIDE_SIGN = config.SIDE === 'SHORT' ? -1 : 1
 
   setInterval(() => {
-    config = lsGet('config')
+    config = store.get()
   }, 10 * 1000)
 
   const state = {
@@ -368,9 +368,8 @@ const start = async (contents) => {
     state.tpOrders = []
     state.slOrder = null
     cancelOrders()
-    lsSet('config', { ...config, TRADES_COUNT: config.TRADES_COUNT + 1 })
-    config = lsGet('config')
-    contents.send('onChangeConfig')
+    store.set({ TRADES_COUNT: config.TRADES_COUNT + 1 })
+    config = store.get()
   }
 
   const accountUpdate = async (data) => {
