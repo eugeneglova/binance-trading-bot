@@ -85,7 +85,7 @@ let isRunning
 ipcMain.on('start', async (event) => {
   isRunning = true
   event.reply('onChangeIsRunning', isRunning)
-  stop = await start()
+  stop = await start(mainWindow.webContents)
 })
 ipcMain.on('stop', (event) => {
   stop && stop()

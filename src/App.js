@@ -20,6 +20,7 @@ function App() {
     setConfig(ipcRenderer.sendSync('getConfig'))
     setIsRunning(ipcRenderer.sendSync('getIsRunning'))
     ipcRenderer.on('onChangeIsRunning', (event, value) => setIsRunning(JSON.parse(value)))
+    ipcRenderer.on('onChangeConfig', () => setConfig(ipcRenderer.sendSync('getConfig')))
   }, [])
 
   return (
