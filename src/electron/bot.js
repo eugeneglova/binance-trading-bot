@@ -23,8 +23,9 @@ const start = async () => {
     GRID,
     X_PRICE,
     X_AMOUNT,
-    TP_PERCENT,
-    MAX_TP_COUNT,
+    TP_MIN_PERCENT,
+    TP_MAX_PERCENT,
+    TP_MAX_COUNT,
     SP_PERCENT,
     SP_PERCENT_TRIGGER,
     SL_PERCENT,
@@ -39,8 +40,9 @@ const start = async () => {
     GRID = cfg.GRID
     X_PRICE = cfg.X_PRICE
     X_AMOUNT = cfg.X_AMOUNT
-    TP_PERCENT = cfg.TP_PERCENT
-    MAX_TP_COUNT = cfg.MAX_TP_COUNT
+    TP_MIN_PERCENT = cfg.TP_MIN_PERCENT
+    TP_MAX_PERCENT = cfg.TP_MAX_PERCENT
+    TP_MAX_COUNT = cfg.TP_MAX_COUNT
     SP_PERCENT = cfg.SP_PERCENT
     SP_PERCENT_TRIGGER = cfg.SP_PERCENT_TRIGGER
     SL_PERCENT = cfg.SL_PERCENT
@@ -108,14 +110,15 @@ const start = async () => {
 
   const createTpOrders = async () => {
     const p = state.position
-    const maxPrice = getPLPrice(parseFloat(p.entryPrice), TP_PERCENT, BOT_SIDE_SIGN)
+    const minPrice = getPLPrice(parseFloat(p.entryPrice), TP_MIN_PERCENT, BOT_SIDE_SIGN)
+    const maxPrice = getPLPrice(parseFloat(p.entryPrice), TP_MAX_PERCENT, BOT_SIDE_SIGN)
     const orders = getTpOrders({
-      basePrice: parseFloat(p.entryPrice),
       amount: parseFloat(p.positionAmt),
       minAmount: 1 / Math.pow(10, state.quantityPrecision),
+      minPrice,
       maxPrice,
       sideSign: BOT_SIDE_SIGN,
-      maxOrders: MAX_TP_COUNT,
+      maxOrders: TP_MAX_COUNT,
       pricePrecision: state.pricePrecision,
       quantityPrecision: state.quantityPrecision,
     })
@@ -233,7 +236,7 @@ const start = async () => {
     const tpDistanceCoefficient =
       posSize > numOfRiskOrders ? 1 / (posSize - numOfRiskOrders / 2) : 1
     const price = precision(
-      getPLPrice(p.entryPrice, (TP_PERCENT + plus) * tpDistanceCoefficient, BOT_SIDE_SIGN),
+      getPLPrice(p.entryPrice, (TP_MAX_PERCENT + plus) * tpDistanceCoefficient, BOT_SIDE_SIGN),
       state.pricePrecision,
     )
     const amount = Math.max(Math.abs(parseFloat(p.positionAmt)), 1 / Math.pow(10, state.quantityPrecision))

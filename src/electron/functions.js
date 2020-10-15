@@ -147,9 +147,9 @@ const getTpOrdersCount = (amount, minAmount, maxOrders = 8) =>
   Math.min(maxOrders, Math.abs(Math.round(amount / minAmount)))
 
 const getTpOrders = ({
-  basePrice,
   amount,
   minAmount,
+  minPrice,
   maxPrice,
   sideSign,
   maxOrders = 8,
@@ -157,26 +157,22 @@ const getTpOrders = ({
   quantityPrecision,
 }) => {
   const count = getTpOrdersCount(amount, minAmount, maxOrders)
-  const interval = Math.abs(basePrice - maxPrice) / count
+  const interval = Math.abs(minPrice - maxPrice) / (count - 1)
   const ordAmount = precision(
     -sideSign * Math.max(minAmount, Math.abs(amount) / count),
     quantityPrecision,
   )
   const orders = _.range(0, count).map((i) => {
-    const price = precision(basePrice + (i + 1) * sideSign * interval, pricePrecision)
+    const price = precision(minPrice + i * sideSign * interval, pricePrecision)
     return { price, amount: ordAmount }
   })
   return orders
 }
 
-// const a = getTpOrders(370, 1.28, 0.04, 372, 1)
-// const b = getTpOrders(372, -0.16, 0.04, 370, -1)
-// console.log(a, b)
-// console.log(getOrders(370, 0.04, 8, 1))
 // console.log(getTpOrders({
-//   basePrice: 11327.48,
 //   amount: 0.02,
 //   minAmount: 0.001,
+//   minPrice: 11327.48,
 //   maxPrice: 11385.73,
 //   sideSign: 1,
 //   maxOrders: 8,

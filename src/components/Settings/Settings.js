@@ -166,8 +166,8 @@ const Main = ({ config, onSuccess }) => {
       </Form.List>
 
       <Form.Item
-        label="Take Profit %"
-        name="TP_PERCENT"
+        label="Take Profit minimum %"
+        name="TP_MIN_PERCENT"
         rules={[
           {
             required: true,
@@ -179,8 +179,21 @@ const Main = ({ config, onSuccess }) => {
       </Form.Item>
 
       <Form.Item
-        label="Maximum number of Take Profit orders"
-        name="MAX_TP_COUNT"
+        label="Take Profit maximum %"
+        name="TP_MAX_PERCENT"
+        rules={[
+          {
+            required: true,
+            message: 'Please enter your take profit % value',
+          },
+        ]}
+      >
+        <Input />
+      </Form.Item>
+
+      <Form.Item
+        label="Take Profit maximum number of orders"
+        name="TP_MAX_COUNT"
         rules={[
           {
             required: true,
