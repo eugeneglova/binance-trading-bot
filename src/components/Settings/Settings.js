@@ -243,6 +243,26 @@ const Main = ({ config, onSuccess }) => {
         <Input />
       </Form.Item>
 
+      <Form.Item
+        label="Number of closed positions"
+        name="TRADES_COUNT"
+      >
+        <Input disabled />
+      </Form.Item>
+
+      <Form.Item
+        label="Number of closed positions till pause bot"
+        name="TRADES_TILL_STOP"
+        rules={[
+          {
+            required: true,
+            message: 'Please enter number of trades to pause bot',
+          },
+        ]}
+      >
+        <Input />
+      </Form.Item>
+
       <Form.Item {...tailLayout}>
         <Button type="primary" htmlType="submit">
           Save

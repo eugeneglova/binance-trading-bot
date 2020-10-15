@@ -3,6 +3,7 @@ const _ = require('lodash')
 
 const {
   lsGet,
+  lsSet,
   precision,
   getPLPrice,
   getPLPerc,
@@ -14,6 +15,7 @@ const {
 } = require('./functions')
 
 const start = async () => {
+  let config = lsGet('config')
   let {
     APIKEY,
     APISECRET,
@@ -29,24 +31,26 @@ const start = async () => {
     SP_PERCENT,
     SP_PERCENT_TRIGGER,
     SL_PERCENT,
+    TRADES_COUNT,
     TRADES_TILL_STOP,
-  } = lsGet('config')
+  } = config
 
   let BOT_SIDE_SIGN = SIDE === 'SHORT' ? -1 : 1
 
   setInterval(() => {
-    const cfg = lsGet('config')
-    AMOUNT = cfg.AMOUNT
-    GRID = cfg.GRID
-    X_PRICE = cfg.X_PRICE
-    X_AMOUNT = cfg.X_AMOUNT
-    TP_MIN_PERCENT = cfg.TP_MIN_PERCENT
-    TP_MAX_PERCENT = cfg.TP_MAX_PERCENT
-    TP_MAX_COUNT = cfg.TP_MAX_COUNT
-    SP_PERCENT = cfg.SP_PERCENT
-    SP_PERCENT_TRIGGER = cfg.SP_PERCENT_TRIGGER
-    SL_PERCENT = cfg.SL_PERCENT
-    TRADES_TILL_STOP = cfg.TRADES_TILL_STOP
+    config = lsGet('config')
+    AMOUNT = config.AMOUNT
+    GRID = config.GRID
+    X_PRICE = config.X_PRICE
+    X_AMOUNT = config.X_AMOUNT
+    TP_MIN_PERCENT = config.TP_MIN_PERCENT
+    TP_MAX_PERCENT = config.TP_MAX_PERCENT
+    TP_MAX_COUNT = config.TP_MAX_COUNT
+    SP_PERCENT = config.SP_PERCENT
+    SP_PERCENT_TRIGGER = config.SP_PERCENT_TRIGGER
+    SL_PERCENT = config.SL_PERCENT
+    TRADES_COUNT = config.TRADES_COUNT
+    TRADES_TILL_STOP = config.TRADES_TILL_STOP
     BOT_SIDE_SIGN = SIDE === 'SHORT' ? -1 : 1
   }, 10 * 1000)
 
@@ -54,7 +58,6 @@ const start = async () => {
     lOrders: [],
     tpOrders: [],
     slOrder: null,
-    tradesCount: 0,
   }
 
   const binance = Binance({
@@ -312,7 +315,7 @@ const start = async () => {
       '(',
       precision(plPerc),
       '%)',
-      `[${state.tradesCount}/${TRADES_TILL_STOP}]`,
+      `[${TRADES_COUNT}/${TRADES_TILL_STOP}]`,
     )
     if (state.spOrder) {
       console.log('sp', spPrice, diff)
@@ -397,7 +400,7 @@ const start = async () => {
     state.lOrders = []
     state.tpOrders = []
     state.slOrder = null
-    state.tradesCount += 1
+    lsSet('config', { ...config, TRADES_COUNT: config.TRADES_COUNT + 1 })
     cancelOrders()
   }
 
@@ -501,7 +504,7 @@ const start = async () => {
   checkPositions()
 
   const createOrdersIntervalId = setInterval(async () => {
-    if (state.position || state.tradesCount >= TRADES_TILL_STOP) return
+    if (state.position || TRADES_COUNT >= TRADES_TILL_STOP) return
     console.log('create orders by position timeout')
     await cancelOrders()
     createOrders()

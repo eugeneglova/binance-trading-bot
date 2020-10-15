@@ -53,6 +53,7 @@ const { ipcMain } = electron
 ipcMain.on('getConfig', (event) => {
   const config = lsGet('config')
   const defaultConfig = {
+    SYMBOL: 'BTCUSDT',
     SIDE: 'LONG',
     AMOUNT: 0.002,
     GRID: [
@@ -69,8 +70,8 @@ ipcMain.on('getConfig', (event) => {
     SP_PERCENT: 0.1,
     SP_PERCENT_TRIGGER: 0.2,
     SL_PERCENT: -3,
+    TRADES_COUNT: 0,
     TRADES_TILL_STOP: 1000,
-    SYMBOL: 'BTCUSDT',
   }
   event.returnValue = { ...defaultConfig, ...config }
 })
