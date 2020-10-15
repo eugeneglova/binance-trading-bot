@@ -140,8 +140,8 @@ const getPosSize = (
 
 // console.log(getPosSize(375, 125, 7, [1, 3, 3, 1.6, 1.6, 2]))
 
-const getOrdersAmount = (orders) =>
-  _.reduce(orders, (acc, order) => acc + parseFloat(order.origQty), 0)
+const getOrdersAmount = (orders, key = 'origQty') =>
+  _.reduce(orders, (acc, order) => acc + parseFloat(order[key]), 0)
 
 const getTpOrdersCount = (amount, minAmount, maxOrders = 8) =>
   Math.min(maxOrders, Math.abs(Math.round(amount / minAmount)))
@@ -173,6 +173,16 @@ const getTpOrders = ({
 // const b = getTpOrders(372, -0.16, 0.04, 370, -1)
 // console.log(a, b)
 // console.log(getOrders(370, 0.04, 8, 1))
+// console.log(getTpOrders({
+//   basePrice: 11327.48,
+//   amount: 0.02,
+//   minAmount: 0.001,
+//   maxPrice: 11385.73,
+//   sideSign: 1,
+//   maxOrders: 8,
+//   pricePrecision: 2,
+//   quantityPrecision: 3,
+// }))
 
 module.exports = {
   lsGet,

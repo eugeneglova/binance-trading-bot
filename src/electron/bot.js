@@ -24,6 +24,7 @@ const start = async () => {
     X_PRICE,
     X_AMOUNT,
     TP_PERCENT,
+    MAX_TP_COUNT,
     SP_PERCENT,
     SP_PERCENT_TRIGGER,
     SL_PERCENT,
@@ -39,6 +40,7 @@ const start = async () => {
     X_PRICE = cfg.X_PRICE
     X_AMOUNT = cfg.X_AMOUNT
     TP_PERCENT = cfg.TP_PERCENT
+    MAX_TP_COUNT = cfg.MAX_TP_COUNT
     SP_PERCENT = cfg.SP_PERCENT
     SP_PERCENT_TRIGGER = cfg.SP_PERCENT_TRIGGER
     SL_PERCENT = cfg.SL_PERCENT
@@ -113,7 +115,7 @@ const start = async () => {
       minAmount: 1 / Math.pow(10, state.quantityPrecision),
       maxPrice,
       sideSign: BOT_SIDE_SIGN,
-      maxOrders: GRID.length + 1,
+      maxOrders: MAX_TP_COUNT,
       pricePrecision: state.pricePrecision,
       quantityPrecision: state.quantityPrecision,
     })

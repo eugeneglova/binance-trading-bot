@@ -179,6 +179,19 @@ const Main = ({ config, onSuccess }) => {
       </Form.Item>
 
       <Form.Item
+        label="Maximum number of Take Profit orders"
+        name="MAX_TP_COUNT"
+        rules={[
+          {
+            required: true,
+            message: 'Please enter max number of take profit orders',
+          },
+        ]}
+      >
+        <Input />
+      </Form.Item>
+
+      <Form.Item
         label="Stop Profit %"
         name="SP_PERCENT"
         rules={[

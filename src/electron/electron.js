@@ -64,6 +64,7 @@ ipcMain.on('getConfig', (event) => {
       { PRICE_STEP: 120, X_AMOUNT: 2 },
     ],
     TP_PERCENT: 0.4,
+    MAX_TP_COUNT: 6,
     SP_PERCENT: 0.1,
     SP_PERCENT_TRIGGER: 0.2,
     SL_PERCENT: -3,
