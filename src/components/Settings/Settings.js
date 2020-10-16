@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import moment from 'moment'
-import { Form, Input, Button, Select, DatePicker, Space } from 'antd'
+import { Form, Input, Button, Select, DatePicker, Radio, Space } from 'antd'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import Store from 'electron-store'
 
@@ -30,6 +30,14 @@ const Settings = () => {
     DATETIME_RANGE: config.DATETIME_RANGE.map((date) => moment(date)),
   }
 
+  const [form] = Form.useForm()
+  const [priceType, setPriceType] = useState(config.PRICE_TYPE);
+  const onFormValuesChange = ({ PRICE_TYPE }) => {
+    if (PRICE_TYPE) {
+      setPriceType(PRICE_TYPE)
+    }
+  }
+
   const onFinish = (values) => {
     console.log('Success:', values)
     store.set(values)
@@ -42,10 +50,12 @@ const Settings = () => {
   return (
     <Form
       {...layout}
+      form={form}
       name="basic"
       initialValues={initialValues}
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
+      onValuesChange={onFormValuesChange}
     >
       <Form.Item
         label="Symbol"
@@ -79,6 +89,53 @@ const Settings = () => {
       >
         <Input />
       </Form.Item>
+
+      <Form.Item
+        label="First order price type"
+        name="PRICE_TYPE"
+        rules={[
+          {
+            required: false,
+            message: 'Please enter your initial order price',
+          },
+        ]}
+      >
+        <Radio.Group
+          options={[{ label: 'Price Distance', value: 'distance' }, { label: 'Price', value: 'price' }]}
+          optionType='button'
+          buttonStyle='solid'
+        />
+      </Form.Item>
+
+      {priceType === 'price' && (
+        <Form.Item
+          label="First Order Price"
+          name="PRICE"
+          rules={[
+            {
+              required: true,
+              message: 'Please enter your initial order price',
+            },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+      )}
+
+      {priceType === 'distance' && (
+        <Form.Item
+          label="First Order Price Distance"
+          name="PRICE_DISTANCE"
+          rules={[
+            {
+              required: true,
+              message: 'Please enter your initial order price distance from quote price',
+            },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+      )}
 
       <Form.List name="GRID">
         {(fields, { add, remove }) => {

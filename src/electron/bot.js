@@ -54,9 +54,11 @@ const start = async (contents) => {
       .quote(config.SYMBOL)
       .catch((e) => console.error(new Error().stack) || console.error(e))
     const topBookPrice = parseFloat(BOT_SIDE_SIGN > 0 ? quote.bidPrice : quote.askPrice)
-    const price = getNextPrice(topBookPrice, 0, BOT_SIDE_SIGN, [
-      { PRICE_STEP: _.first(config.GRID).PRICE_STEP * 0.1 },
-    ])
+    const price = config.PRICE_TYPE === 'distance'
+      ? getNextPrice(topBookPrice, 0, BOT_SIDE_SIGN, [
+        { PRICE_STEP: config.PRICE_DISTANCE },
+      ])
+      : config.PRICE
     console.log({ price, topBookPrice })
     const amount = BOT_SIDE_SIGN * config.AMOUNT
     const orders = getOrders({

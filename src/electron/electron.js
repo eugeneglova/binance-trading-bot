@@ -12,6 +12,9 @@ new Store({
     SYMBOL: 'BTCUSDT',
     SIDE: 'LONG',
     AMOUNT: 0.002,
+    PRICE_TYPE: 'distance',
+    PRICE: 10000,
+    PRICE_DISTANCE: 2,
     GRID: [
       { PRICE_STEP: 20, X_AMOUNT: 1 },
       { PRICE_STEP: 20, X_AMOUNT: 3 },
