@@ -1,9 +1,11 @@
 import React from 'react'
-import { Form, Input, Button, Select, Space } from 'antd'
+import moment from 'moment'
+import { Form, Input, Button, Select, DatePicker, Space } from 'antd'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import Store from 'electron-store'
 
 const { Option } = Select
+const { RangePicker } = DatePicker
 
 const layout = {
   labelCol: {
@@ -20,9 +22,13 @@ const tailLayout = {
   },
 }
 
-const Main = ({ onSuccess }) => {
+const Settings = () => {
   const store = new Store()
   const config = store.get()
+  const initialValues = {
+    ...config,
+    DATETIME_RANGE: config.DATETIME_RANGE.map((date) => moment(date)),
+  }
 
   const onFinish = (values) => {
     console.log('Success:', values)
@@ -37,7 +43,7 @@ const Main = ({ onSuccess }) => {
     <Form
       {...layout}
       name="basic"
-      initialValues={config}
+      initialValues={initialValues}
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
     >
@@ -201,15 +207,12 @@ const Main = ({ onSuccess }) => {
         <Input />
       </Form.Item>
 
-      <Form.Item
-        label="Number of closed positions"
-        name="TRADES_COUNT"
-      >
+      <Form.Item label="Number of closed positions" name="TRADES_COUNT">
         <Input disabled />
       </Form.Item>
 
       <Form.Item
-        label="Number of closed positions till pause bot"
+        label="Pause bot after number of closed positions"
         name="TRADES_TILL_STOP"
         rules={[
           {
@@ -221,6 +224,19 @@ const Main = ({ onSuccess }) => {
         <Input />
       </Form.Item>
 
+      <Form.Item
+        label="Date time range to run bot"
+        name="DATETIME_RANGE"
+        rules={[
+          {
+            required: true,
+            message: 'Please enter date time range to run bot',
+          },
+        ]}
+      >
+        <RangePicker showTime />
+      </Form.Item>
+
       <Form.Item {...tailLayout}>
         <Button type="primary" htmlType="submit">
           Save
@@ -230,4 +246,4 @@ const Main = ({ onSuccess }) => {
   )
 }
 
-export default Main
+export default Settings

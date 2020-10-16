@@ -1,6 +1,7 @@
 const Binance = require('node-binance-api-ext')
 const Store = require('electron-store')
 const _ = require('lodash')
+const moment = require('moment')
 
 const {
   precision,
@@ -472,7 +473,9 @@ const start = async (contents) => {
   checkPositions()
 
   const createOrdersIntervalId = setInterval(async () => {
-    if (state.position || config.TRADES_COUNT >= config.TRADES_TILL_STOP) return
+    if (state.position) return
+    if (config.TRADES_COUNT >= config.TRADES_TILL_STOP) return
+    if (moment().isBefore(config.DATETIME_RANGE[0]) || moment().isAfter(config.DATETIME_RANGE[1])) return
     console.log('create orders by position timeout')
     await cancelOrders()
     createOrders()

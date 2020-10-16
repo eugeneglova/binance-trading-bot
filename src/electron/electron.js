@@ -28,6 +28,7 @@ new Store({
     SL_PERCENT: -3,
     TRADES_COUNT: 0,
     TRADES_TILL_STOP: 1000,
+    DATETIME_RANGE: ['2020-10-01T00:00:00.000Z', '2030-01-01T00:00:00.000Z'],
   }
 })
 
@@ -48,7 +49,7 @@ function createWindow() {
       nodeIntegration: true
     }
   });
-  mainWindow.loadURL(isDev ? 'http://localhost:3009' : `file://${path.join(__dirname, '../../build/index.html')}`);
+  mainWindow.loadURL(isDev ? 'http://localhost:3008' : `file://${path.join(__dirname, '../../build/index.html')}`);
   if (isDev) {
     // Open the DevTools.
     //BrowserWindow.addDevToolsExtension('<location to your react chrome extension>');
