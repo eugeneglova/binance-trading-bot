@@ -17,7 +17,6 @@ const {
 const start = async (contents) => {
   const store = new Store()
   let config = store.get()
-  let BOT_SIDE_SIGN = config.SIDE === 'SHORT' ? -1 : 1
 
   setInterval(() => {
     config = store.get()
@@ -38,7 +37,7 @@ const start = async (contents) => {
     const allOpenOrders = await binance.futures
       .openOrders(config.SYMBOL)
       .catch((e) => console.error(new Error().stack) || console.error(e))
-    const orders = _.filter(allOpenOrders, (o) => o.positionSide === config.SIDE)
+    const orders = _.filter(allOpenOrders, (o) => config.SIDE === 'AUTO' ? true : o.positionSide === config.SIDE)
     // console.log(orders)
     return Promise.allSettled(
       orders.map(({ orderId }) =>
@@ -49,23 +48,24 @@ const start = async (contents) => {
     )
   }
 
-  const createOrders = async () => {
+  const createOrders = async (positionSide) => {
+    const SIDE_SIGN = positionSide === 'SHORT' ? -1 : 1
     const quote = await binance.futures
       .quote(config.SYMBOL)
       .catch((e) => console.error(new Error().stack) || console.error(e))
-    const topBookPrice = parseFloat(BOT_SIDE_SIGN > 0 ? quote.bidPrice : quote.askPrice)
+    const topBookPrice = parseFloat(SIDE_SIGN > 0 ? quote.bidPrice : quote.askPrice)
     const price = config.PRICE_TYPE === 'distance'
-      ? getNextPrice(topBookPrice, 0, BOT_SIDE_SIGN, [
+      ? getNextPrice(topBookPrice, 0, SIDE_SIGN, [
         { PRICE_STEP: config.PRICE_DISTANCE },
       ])
-      : BOT_SIDE_SIGN > 0 ? Math.min(config.PRICE, topBookPrice) : Math.max(config.PRICE, topBookPrice)
+      : SIDE_SIGN > 0 ? Math.min(config.PRICE, topBookPrice) : Math.max(config.PRICE, topBookPrice)
     console.log({ price, topBookPrice })
-    const amount = BOT_SIDE_SIGN * config.AMOUNT
+    const amount = SIDE_SIGN * config.AMOUNT
     const orders = getOrders({
       price,
       amount,
       count: config.GRID.length + 1,
-      sideSign: BOT_SIDE_SIGN,
+      sideSign: SIDE_SIGN,
       grid: config.GRID,
       pricePrecision: state.pricePrecision,
       quantityPrecision: state.quantityPrecision,
@@ -74,8 +74,8 @@ const start = async (contents) => {
     console.log('create orders')
     await Promise.allSettled(
       _.map(orders, (o) =>
-        binance.futures[BOT_SIDE_SIGN > 0 ? 'buy' : 'sell'](config.SYMBOL, Math.abs(o.amount), o.price, {
-          positionSide: config.SIDE,
+        binance.futures[SIDE_SIGN > 0 ? 'buy' : 'sell'](config.SYMBOL, Math.abs(o.amount), o.price, {
+          positionSide,
           postOnly: true,
         }).catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
@@ -84,14 +84,15 @@ const start = async (contents) => {
 
   const createTpOrders = async () => {
     const p = state.position
-    const minPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_MIN_PERCENT, BOT_SIDE_SIGN)
-    const maxPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_MAX_PERCENT, BOT_SIDE_SIGN)
+    const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
+    const minPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_MIN_PERCENT, SIDE_SIGN)
+    const maxPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_MAX_PERCENT, SIDE_SIGN)
     const orders = getTpOrders({
       amount: parseFloat(p.positionAmt),
       minAmount: 1 / Math.pow(10, state.quantityPrecision),
       minPrice,
       maxPrice,
-      sideSign: BOT_SIDE_SIGN,
+      sideSign: SIDE_SIGN,
       maxOrders: config.TP_MAX_COUNT,
       pricePrecision: state.pricePrecision,
       quantityPrecision: state.quantityPrecision,
@@ -100,8 +101,8 @@ const start = async (contents) => {
     console.log('create tp orders')
     await Promise.allSettled(
       _.map(orders, (o) =>
-        binance.futures[BOT_SIDE_SIGN < 0 ? 'buy' : 'sell'](config.SYMBOL, Math.abs(o.amount), o.price, {
-          positionSide: config.SIDE,
+        binance.futures[SIDE_SIGN < 0 ? 'buy' : 'sell'](config.SYMBOL, Math.abs(o.amount), o.price, {
+          positionSide: p.positionSide,
         }).catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     )
@@ -115,19 +116,20 @@ const start = async (contents) => {
   const onPositionUpdate = async () => {
     // console.log('UPDATE POS')
     const p = state.position
+    const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
     // console.log(p)
     contents.send('onPositionUpdate', state)
-    const plPerc = getPLPerc(p.entryPrice, p.markPrice, BOT_SIDE_SIGN)
+    const plPerc = getPLPerc(p.entryPrice, p.markPrice, SIDE_SIGN)
     if (!state.lOrders.length) {
       await (async () => {
         console.log('getting limit orders')
         const allOpenOrders = await binance.futures
           .openOrders(config.SYMBOL)
           .catch((e) => console.error(new Error().stack) || console.error(e))
-        const lSide = BOT_SIDE_SIGN > 0 ? 'BUY' : 'SELL'
+        const lSide = SIDE_SIGN > 0 ? 'BUY' : 'SELL'
         const orders = _.filter(
           allOpenOrders,
-          (o) => o.positionSide === config.SIDE && o.type === 'LIMIT' && o.side === lSide,
+          (o) => o.positionSide === p.positionSide && o.type === 'LIMIT' && o.side === lSide,
         )
         if (!orders.length) return
         // console.log(orders)
@@ -143,10 +145,10 @@ const start = async (contents) => {
         const allOpenOrders = await binance.futures
           .openOrders(config.SYMBOL)
           .catch((e) => console.error(new Error().stack) || console.error(e))
-        const tpSide = BOT_SIDE_SIGN < 0 ? 'BUY' : 'SELL'
+        const tpSide = SIDE_SIGN < 0 ? 'BUY' : 'SELL'
         const orders = _.filter(
           allOpenOrders,
-          (o) => o.positionSide === config.SIDE && o.type === 'LIMIT' && o.side === tpSide,
+          (o) => o.positionSide === p.positionSide && o.type === 'LIMIT' && o.side === tpSide,
         )
         if (!orders.length) return
         // console.log(orders)
@@ -162,14 +164,14 @@ const start = async (contents) => {
         const allOpenOrders = await binance.futures
           .openOrders(config.SYMBOL)
           .catch((e) => console.error(new Error().stack) || console.error(e))
-        const spSide = BOT_SIDE_SIGN < 0 ? 'BUY' : 'SELL'
+        const spSide = SIDE_SIGN < 0 ? 'BUY' : 'SELL'
         const order = _.find(
           allOpenOrders,
           (o) =>
-            o.positionSide === config.SIDE &&
+            o.positionSide === p.positionSide &&
             o.type === 'STOP_MARKET' &&
             o.side === spSide &&
-            Math.sign(parseFloat(o.stopPrice) - parseFloat(p.entryPrice)) === BOT_SIDE_SIGN,
+            Math.sign(parseFloat(o.stopPrice) - parseFloat(p.entryPrice)) === SIDE_SIGN,
         )
         if (!order) return
         console.log('sp:', order.origQty, order.stopPrice)
@@ -182,14 +184,14 @@ const start = async (contents) => {
         const allOpenOrders = await binance.futures
           .openOrders(config.SYMBOL)
           .catch((e) => console.error(new Error().stack) || console.error(e))
-        const slSide = BOT_SIDE_SIGN < 0 ? 'BUY' : 'SELL'
+        const slSide = SIDE_SIGN < 0 ? 'BUY' : 'SELL'
         const order = _.find(
           allOpenOrders,
           (o) =>
-            o.positionSide === config.SIDE &&
+            o.positionSide === p.positionSide &&
             o.type === 'STOP_MARKET' &&
             o.side === slSide &&
-            Math.sign(parseFloat(o.stopPrice) - parseFloat(p.entryPrice)) !== BOT_SIDE_SIGN,
+            Math.sign(parseFloat(o.stopPrice) - parseFloat(p.entryPrice)) !== SIDE_SIGN,
         )
         if (!order) return
         console.log('sl:', order.origQty, order.stopPrice)
@@ -200,7 +202,7 @@ const start = async (contents) => {
     const diff = plPerc - config.SP_PERCENT_TRIGGER
     const plus = diff > 0 ? diff : 0
     const spPrice = precision(
-      getPLPrice(parseFloat(p.entryPrice), config.SP_PERCENT + plus, BOT_SIDE_SIGN),
+      getPLPrice(parseFloat(p.entryPrice), config.SP_PERCENT + plus, SIDE_SIGN),
       state.pricePrecision,
     )
 
@@ -211,7 +213,7 @@ const start = async (contents) => {
     const tpDistanceCoefficient =
       posSize > numOfRiskOrders ? 1 / (posSize - numOfRiskOrders / 2) : 1
     const price = precision(
-      getPLPrice(p.entryPrice, (config.TP_MAX_PERCENT + plus) * tpDistanceCoefficient, BOT_SIDE_SIGN),
+      getPLPrice(p.entryPrice, (config.TP_MAX_PERCENT + plus) * tpDistanceCoefficient, SIDE_SIGN),
       state.pricePrecision,
     )
     const amount = Math.max(Math.abs(parseFloat(p.positionAmt)), 1 / Math.pow(10, state.quantityPrecision))
@@ -236,7 +238,7 @@ const start = async (contents) => {
           price: p.entryPrice,
           amount,
           count: config.GRID.length + 1,
-          sideSign: BOT_SIDE_SIGN,
+          sideSign: SIDE_SIGN,
           start: Math.ceil(posSize) - 1,
           grid: config.GRID,
           pricePrecision: state.pricePrecision,
@@ -246,12 +248,12 @@ const start = async (contents) => {
         console.log('create orders')
         await Promise.all(
           _.map(orders, (o) =>
-            binance.futures[BOT_SIDE_SIGN > 0 ? 'buy' : 'sell'](
+            binance.futures[SIDE_SIGN > 0 ? 'buy' : 'sell'](
               config.SYMBOL,
               Math.abs(o.amount),
               o.price,
               {
-                positionSide: config.SIDE,
+                positionSide: p.positionSide,
                 postOnly: true,
               },
             ).catch((e) => console.error(new Error().stack) || console.error(e)),
@@ -293,12 +295,12 @@ const start = async (contents) => {
     }
     if (!state.spOrder && diff > 0) {
       console.log('create sp order', { spPrice, amount })
-      await binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
+      await binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
         config.SYMBOL,
         Math.abs(amount),
         spPrice,
         {
-          positionSide: config.SIDE,
+          positionSide: p.positionSide,
         },
       ).catch((e) => console.error(new Error().stack) || console.error(e))
     }
@@ -313,29 +315,29 @@ const start = async (contents) => {
       binance.futures
         .cancel(config.SYMBOL, { orderId: state.spOrder.orderId })
         .catch((e) => console.log(e))
-      binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
+      binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
         config.SYMBOL,
         Math.abs(amount),
         spPrice,
         {
-          positionSide: config.SIDE,
+          positionSide: p.positionSide,
         },
       ).catch((e) => console.log(e))
       state.spOrder = null
     }
 
     const slPrice = precision(
-      getPLPrice(parseFloat(p.entryPrice), config.SL_PERCENT, BOT_SIDE_SIGN),
+      getPLPrice(parseFloat(p.entryPrice), config.SL_PERCENT, SIDE_SIGN),
       state.pricePrecision,
     )
     if (!state.slOrder) {
       console.log('create sl order', amount, slPrice)
-      await binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
+      await binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
         config.SYMBOL,
         Math.abs(amount),
         slPrice,
         {
-          positionSide: config.SIDE,
+          positionSide: p.positionSide,
         },
       ).catch((e) => console.error(new Error().stack) || console.error(e))
     } else if (
@@ -353,12 +355,12 @@ const start = async (contents) => {
       await binance.futures
         .cancel(config.SYMBOL, { orderId: state.slOrder.orderId })
         .catch((e) => console.error(new Error().stack) || console.error(e))
-      binance.futures[BOT_SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
+      binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
         config.SYMBOL,
         Math.abs(amount),
         slPrice,
         {
-          positionSide: config.SIDE,
+          positionSide: p.positionSide,
         },
       ).catch((e) => console.error(new Error().stack) || console.error(e))
       state.slOrder = null
@@ -383,8 +385,11 @@ const start = async (contents) => {
     const positions = await binance.futures
       .positionRisk()
       .catch((e) => console.error(new Error().stack) || console.error(e))
-    const p = _.find(positions, { symbol: config.SYMBOL, positionSide: config.SIDE })
-    if (parseFloat(p.positionAmt) !== 0) {
+    const p = _.find(positions, ({ symbol, positionSide, positionAmt }) => (
+      symbol === config.SYMBOL && (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) && parseFloat(positionAmt) !== 0
+    ))
+
+    if (p) {
       if (!state.position) {
         state.position = p
         onPositionNew()
@@ -460,17 +465,20 @@ const start = async (contents) => {
   const positions = await binance.futures
     .positionRisk()
     .catch((e) => console.error(new Error().stack) || console.error(e))
-  const p = _.find(positions, { symbol: config.SYMBOL, positionSide: config.SIDE })
-  if (!p) {
-    console.error('Please set Position Mode to Hedge Mode')
-    process.exit(0)
-  }
+  const p = _.find(positions, ({ symbol, positionSide, positionAmt }) => (
+    symbol === config.SYMBOL && (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) && parseFloat(positionAmt) !== 0
+  ))
   // console.log(p)
-  if (parseFloat(p.positionAmt) !== 0) {
+  if (p) {
     state.position = p
   } else {
     await cancelOrders()
-    createOrders()
+    if (config.SIDE === 'AUTO') {
+      createOrders('LONG')
+      createOrders('SHORT')
+    } else {
+      createOrders(config.SIDE)
+    }
   }
   const checkPositionsIntervalId = setInterval(() => checkPositions(), 15 * 1000)
   checkPositions()
@@ -481,7 +489,12 @@ const start = async (contents) => {
     if (moment().isBefore(config.DATETIME_RANGE[0]) || moment().isAfter(config.DATETIME_RANGE[1])) return
     console.log('create orders by position timeout')
     await cancelOrders()
-    createOrders()
+    if (config.SIDE === 'AUTO') {
+      createOrders('LONG')
+      createOrders('SHORT')
+    } else {
+      createOrders(config.SIDE)
+    }
   }, 2 * 60 * 1000)
 
   const stop = async () => {

@@ -107,6 +107,7 @@ const Settings = () => {
         <Select placeholder="Select position side" allowClear>
           <Option value="LONG">LONG</Option>
           <Option value="SHORT">SHORT</Option>
+          <Option value="AUTO">AUTO</Option>
         </Select>
       </Form.Item>
 
