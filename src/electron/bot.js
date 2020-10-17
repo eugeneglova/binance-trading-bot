@@ -58,7 +58,7 @@ const start = async (contents) => {
       ? getNextPrice(topBookPrice, 0, BOT_SIDE_SIGN, [
         { PRICE_STEP: config.PRICE_DISTANCE },
       ])
-      : config.PRICE
+      : BOT_SIDE_SIGN > 0 ? Math.min(config.PRICE, topBookPrice) : Math.max(config.PRICE, topBookPrice)
     console.log({ price, topBookPrice })
     const amount = BOT_SIDE_SIGN * config.AMOUNT
     const orders = getOrders({
