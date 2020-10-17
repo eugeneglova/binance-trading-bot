@@ -18,6 +18,12 @@ const Trading = ({ isRunning, onStart, onStop }) => {
       render: (symbol) => symbol,
     },
     {
+      title: 'Side',
+      dataIndex: 'positionSide',
+      key: 'positionSide',
+      render: (positionSide) => positionSide,
+    },
+    {
       title: 'Size',
       dataIndex: 'positionAmt',
       key: 'positionAmt',
@@ -34,8 +40,8 @@ const Trading = ({ isRunning, onStart, onStop }) => {
       dataIndex: 'unRealizedProfit',
       key: 'unRealizedProfit',
       render: (unRealizedProfit, p) => {
-        const BOT_SIDE_SIGN = p.positionSide === 'LONG' ? 1 : -1
-        const plPerc = getPLPerc(p.entryPrice, p.markPrice, BOT_SIDE_SIGN)
+        const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
+        const plPerc = getPLPerc(p.entryPrice, p.markPrice, SIDE_SIGN)
         return `${precision(unRealizedProfit)} (${precision(plPerc)}%)`
       },
     },
