@@ -35,6 +35,16 @@ const grids = {
     { PRICE_STEP: 50, X_AMOUNT: 2 },
   ],
 
+  200: [
+    { PRICE_STEP: 3, X_AMOUNT: 1 },
+    { PRICE_STEP: 7, X_AMOUNT: 1 },
+    { PRICE_STEP: 10, X_AMOUNT: 1 },
+    { PRICE_STEP: 20, X_AMOUNT: 3 },
+    { PRICE_STEP: 30, X_AMOUNT: 2 },
+    { PRICE_STEP: 60, X_AMOUNT: 2 },
+    { PRICE_STEP: 70, X_AMOUNT: 3 },
+  ],
+
   250: [
     { PRICE_STEP: 10, X_AMOUNT: 1 },
     { PRICE_STEP: 10, X_AMOUNT: 3 },
