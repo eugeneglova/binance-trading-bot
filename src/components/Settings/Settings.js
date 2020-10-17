@@ -7,21 +7,6 @@ import Store from 'electron-store'
 const { Option } = Select
 const { RangePicker } = DatePicker
 
-const layout = {
-  labelCol: {
-    span: 8,
-  },
-  wrapperCol: {
-    span: 16,
-  },
-}
-const tailLayout = {
-  wrapperCol: {
-    offset: 8,
-    span: 16,
-  },
-}
-
 const Settings = () => {
   const store = new Store()
   const config = store.get()
@@ -49,9 +34,9 @@ const Settings = () => {
 
   return (
     <Form
-      {...layout}
       form={form}
       name="basic"
+      size="small"
       initialValues={initialValues}
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
@@ -137,12 +122,18 @@ const Settings = () => {
         </Form.Item>
       )}
 
+      <p>
+        <strong>Price and amount grid:</strong>
+        <br />
+        Orders will be created based on price step and x amount
+      </p>
+
       <Form.List name="GRID">
         {(fields, { add, remove }) => {
           return (
             <div>
               {fields.map((field) => (
-                <Space key={field.key} style={{ display: 'flex' }} align="start">
+                <Space key={field.key} size="small" align="center">
                   <Form.Item
                     {...field}
                     label="Price Step"
@@ -186,34 +177,42 @@ const Settings = () => {
         }}
       </Form.List>
 
-      <Form.Item
-        label="Take Profit minimum %"
-        name="TP_MIN_PERCENT"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your take profit % value',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
+      <p>
+        <strong>Take Profit:</strong>
+        <br />
+        Percentage range for take profit orders
+      </p>
+
+      <Space size="small" align="center">
+        <Form.Item
+          label="From %"
+          name="TP_MIN_PERCENT"
+          rules={[
+            {
+              required: true,
+              message: 'Please enter your take profit % value',
+            },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="To %"
+          name="TP_MAX_PERCENT"
+          rules={[
+            {
+              required: true,
+              message: 'Please enter your take profit % value',
+            },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+      </Space>
 
       <Form.Item
-        label="Take Profit maximum %"
-        name="TP_MAX_PERCENT"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your take profit % value',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item
-        label="Take Profit maximum number of orders"
+        label="Take Profit orders (maximum)"
         name="TP_MAX_COUNT"
         rules={[
           {
@@ -225,31 +224,39 @@ const Settings = () => {
         <Input />
       </Form.Item>
 
-      <Form.Item
-        label="Stop Profit %"
-        name="SP_PERCENT"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your stop profit % value',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
+      <p>
+        <strong>Stop Without Loss:</strong>
+        <br />
+        Percentage when to add trailing stop loss and minumum when close position
+      </p>
 
-      <Form.Item
-        label="Stop Profit % Trigger"
-        name="SP_PERCENT_TRIGGER"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your stop profit % trigger value',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
+      <Space size="small" align="center">
+        <Form.Item
+          label="Trigger %"
+          name="SP_PERCENT_TRIGGER"
+          rules={[
+            {
+              required: true,
+              message: 'Please enter your stop profit % trigger value',
+            },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="Minimum %"
+          name="SP_PERCENT"
+          rules={[
+            {
+              required: true,
+              message: 'Please enter your stop profit % value',
+            },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+      </Space>
 
       <Form.Item
         label="Stop Loss %"
@@ -264,25 +271,35 @@ const Settings = () => {
         <Input />
       </Form.Item>
 
-      <Form.Item label="Number of closed positions" name="TRADES_COUNT">
-        <Input disabled />
-      </Form.Item>
+      <p>
+        <strong>Pause bot:</strong>
+        <br />
+        Conditions when bot won't open new positions
+      </p>
+
+      <Space size="small" align="center">
+        <Form.Item label="Closed positions" name="TRADES_COUNT">
+          <Input disabled />
+        </Form.Item>
+
+        of
+
+        <Form.Item
+          label="Max positions"
+          name="TRADES_TILL_STOP"
+          rules={[
+            {
+              required: true,
+              message: 'Please enter number of trades to pause bot',
+            },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+      </Space>
 
       <Form.Item
-        label="Pause bot after number of closed positions"
-        name="TRADES_TILL_STOP"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter number of trades to pause bot',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item
-        label="Date time range to run bot"
+        label="Date range"
         name="DATETIME_RANGE"
         rules={[
           {
@@ -294,7 +311,7 @@ const Settings = () => {
         <RangePicker showTime />
       </Form.Item>
 
-      <Form.Item {...tailLayout}>
+      <Form.Item>
         <Button type="primary" htmlType="submit">
           Save
         </Button>
