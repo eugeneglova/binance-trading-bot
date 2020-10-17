@@ -116,6 +116,7 @@ const start = async (contents) => {
     // console.log('UPDATE POS')
     const p = state.position
     // console.log(p)
+    contents.send('onPositionUpdate', state)
     const plPerc = getPLPerc(p.entryPrice, p.markPrice, BOT_SIDE_SIGN)
     if (!state.lOrders.length) {
       await (async () => {
