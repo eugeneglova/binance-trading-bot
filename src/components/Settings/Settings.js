@@ -7,6 +7,44 @@ import Store from 'electron-store'
 const { Option } = Select
 const { RangePicker } = DatePicker
 
+const grids = {
+  330: [
+    { PRICE_STEP: 10, X_AMOUNT: 1 },
+    { PRICE_STEP: 30, X_AMOUNT: 3 },
+    { PRICE_STEP: 50, X_AMOUNT: 3 },
+    { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 80, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 100, X_AMOUNT: 2 },
+  ],
+
+  350: [
+    { PRICE_STEP: 20, X_AMOUNT: 1 },
+    { PRICE_STEP: 20, X_AMOUNT: 3 },
+    { PRICE_STEP: 50, X_AMOUNT: 3 },
+    { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 80, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 120, X_AMOUNT: 2 },
+  ],
+
+  125: [
+    { PRICE_STEP: 4, X_AMOUNT: 1 },
+    { PRICE_STEP: 9, X_AMOUNT: 3 },
+    { PRICE_STEP: 12, X_AMOUNT: 3 },
+    { PRICE_STEP: 20, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 30, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 50, X_AMOUNT: 2 },
+  ],
+
+  250: [
+    { PRICE_STEP: 10, X_AMOUNT: 1 },
+    { PRICE_STEP: 10, X_AMOUNT: 3 },
+    { PRICE_STEP: 30, X_AMOUNT: 3 },
+    { PRICE_STEP: 50, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 90, X_AMOUNT: 2 },
+  ],
+}
+
 const Settings = () => {
   const store = new Store()
   const config = store.get()
@@ -16,7 +54,7 @@ const Settings = () => {
   }
 
   const [form] = Form.useForm()
-  const [priceType, setPriceType] = useState(config.PRICE_TYPE);
+  const [priceType, setPriceType] = useState(config.PRICE_TYPE)
   const onFormValuesChange = ({ PRICE_TYPE }) => {
     if (PRICE_TYPE) {
       setPriceType(PRICE_TYPE)
@@ -86,9 +124,12 @@ const Settings = () => {
         ]}
       >
         <Radio.Group
-          options={[{ label: 'Price Distance', value: 'distance' }, { label: 'Price', value: 'price' }]}
-          optionType='button'
-          buttonStyle='solid'
+          options={[
+            { label: 'Price Distance', value: 'distance' },
+            { label: 'Price', value: 'price' },
+          ]}
+          optionType="button"
+          buttonStyle="solid"
         />
       </Form.Item>
 
@@ -127,6 +168,17 @@ const Settings = () => {
         <br />
         Orders will be created based on price step and x amount
       </p>
+
+      <Radio.Group
+        options={Object.keys(grids).map((item) => ({ label: item, value: item }))}
+        optionType="button"
+        buttonStyle="solid"
+        onChange={(e) => {
+          form.setFieldsValue({
+            GRID: grids[e.target.value],
+          })
+        }}
+      />
 
       <Form.List name="GRID">
         {(fields, { add, remove }) => {
@@ -281,9 +333,7 @@ const Settings = () => {
         <Form.Item label="Closed positions" name="TRADES_COUNT">
           <Input disabled />
         </Form.Item>
-
         of
-
         <Form.Item
           label="Max positions"
           name="TRADES_TILL_STOP"
