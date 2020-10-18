@@ -14,7 +14,7 @@ function App() {
   const [page, setPage] = useState('trading')
 
   useEffect(() => {
-    setIsRunning(ipcRenderer.sendSync('getIsRunning'))
+    setIsRunning(JSON.parse(ipcRenderer.sendSync('getIsRunning')))
     ipcRenderer.on('onChangeIsRunning', (event, value) => setIsRunning(JSON.parse(value)))
   }, [])
 
@@ -53,11 +53,11 @@ function App() {
           {page === 'trading' && (
             <Trading
               isRunning={isRunning}
-              onStart={() => {
-                ipcRenderer.send('start')
+              onStart={(index) => {
+                ipcRenderer.send('start', index)
               }}
-              onStop={() => {
-                ipcRenderer.send('stop')
+              onStop={(index) => {
+                ipcRenderer.send('stop', index)
               }}
             />
           )}

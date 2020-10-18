@@ -1,29 +1,72 @@
 import React from 'react'
-import { Form, Input, Button, Select, Space } from 'antd'
+import moment from 'moment'
+import { Form, Input, Button, Collapse, DatePicker, Radio, Space } from 'antd'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import Store from 'electron-store'
 
-const { Option } = Select
+const { Panel } = Collapse
+const { RangePicker } = DatePicker
 
-const layout = {
-  labelCol: {
-    span: 8,
-  },
-  wrapperCol: {
-    span: 16,
-  },
-}
-const tailLayout = {
-  wrapperCol: {
-    offset: 8,
-    span: 16,
-  },
+const grids = {
+  330: [
+    { PRICE_STEP: 10, X_AMOUNT: 1 },
+    { PRICE_STEP: 30, X_AMOUNT: 3 },
+    { PRICE_STEP: 50, X_AMOUNT: 3 },
+    { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 80, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 100, X_AMOUNT: 2 },
+  ],
+
+  350: [
+    { PRICE_STEP: 20, X_AMOUNT: 1 },
+    { PRICE_STEP: 20, X_AMOUNT: 3 },
+    { PRICE_STEP: 50, X_AMOUNT: 3 },
+    { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 80, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 120, X_AMOUNT: 2 },
+  ],
+
+  125: [
+    { PRICE_STEP: 4, X_AMOUNT: 1 },
+    { PRICE_STEP: 9, X_AMOUNT: 3 },
+    { PRICE_STEP: 12, X_AMOUNT: 3 },
+    { PRICE_STEP: 20, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 30, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 50, X_AMOUNT: 2 },
+  ],
+
+  200: [
+    { PRICE_STEP: 3, X_AMOUNT: 1 },
+    { PRICE_STEP: 7, X_AMOUNT: 1 },
+    { PRICE_STEP: 10, X_AMOUNT: 1 },
+    { PRICE_STEP: 20, X_AMOUNT: 3 },
+    { PRICE_STEP: 30, X_AMOUNT: 2 },
+    { PRICE_STEP: 60, X_AMOUNT: 2 },
+    { PRICE_STEP: 70, X_AMOUNT: 3 },
+  ],
+
+  250: [
+    { PRICE_STEP: 10, X_AMOUNT: 1 },
+    { PRICE_STEP: 10, X_AMOUNT: 3 },
+    { PRICE_STEP: 30, X_AMOUNT: 3 },
+    { PRICE_STEP: 50, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+    { PRICE_STEP: 90, X_AMOUNT: 2 },
+  ],
 }
 
-const Main = ({ onSuccess }) => {
+const Settings = () => {
   const store = new Store()
   const config = store.get()
+  const initialValues = {
+    ...config,
+    POSITIONS: config.POSITIONS.map((p) => ({
+      ...p,
+      DATETIME_RANGE: p.DATETIME_RANGE.map((date) => moment(date)),
+    })),
+  }
 
+  const [form] = Form.useForm()
   const onFinish = (values) => {
     console.log('Success:', values)
     store.set(values)
@@ -35,76 +78,358 @@ const Main = ({ onSuccess }) => {
 
   return (
     <Form
-      {...layout}
+      form={form}
       name="basic"
-      initialValues={config}
+      size="small"
+      initialValues={initialValues}
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
     >
-      <Form.Item
-        label="Symbol"
-        name="SYMBOL"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your pair symbol',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item name="SIDE" label="Position Side" rules={[{ required: true }]}>
-        <Select placeholder="Select position side" allowClear>
-          <Option value="LONG">LONG</Option>
-          <Option value="SHORT">SHORT</Option>
-        </Select>
-      </Form.Item>
-
-      <Form.Item
-        label="First Order Amount"
-        name="AMOUNT"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your initial order amount',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.List name="GRID">
+      <Form.List name="POSITIONS">
         {(fields, { add, remove }) => {
           return (
             <div>
               {fields.map((field) => (
-                <Space key={field.key} style={{ display: 'flex' }} align="start">
-                  <Form.Item
-                    {...field}
-                    label="Price Step"
-                    name={[field.name, 'PRICE_STEP']}
-                    fieldKey={[field.fieldKey, 'PRICE_STEP']}
-                    rules={[{ required: true, message: 'Missing value' }]}
-                  >
-                    <Input placeholder="20" />
-                  </Form.Item>
-                  <Form.Item
-                    {...field}
-                    label="X Amount"
-                    name={[field.name, 'X_AMOUNT']}
-                    fieldKey={[field.fieldKey, 'X_AMOUNT']}
-                    rules={[{ required: true, message: 'Missing value' }]}
-                  >
-                    <Input placeholder="2" />
-                  </Form.Item>
+                <div>
+                  <Space key={field.key} size="small" align="center">
+                    <Form.Item
+                      {...field}
+                      label="Symbol"
+                      name={[field.name, 'SYMBOL']}
+                      fieldKey={[field.fieldKey, 'SYMBOL']}
+                      rules={[{ required: true, message: 'Missing value' }]}
+                    >
+                      <Input placeholder="BTCUSDT" />
+                    </Form.Item>
+                    <Form.Item
+                      {...field}
+                      label="Position Side"
+                      name={[field.name, 'SIDE']}
+                      fieldKey={[field.fieldKey, 'SIDE']}
+                      rules={[{ required: true, message: 'Missing value' }]}
+                    >
+                      <Radio.Group
+                        defaultValue="LONG"
+                        options={[
+                          { label: 'LONG', value: 'LONG' },
+                          { label: 'SHORT', value: 'SHORT' },
+                        ]}
+                        optionType="button"
+                        buttonStyle="solid"
+                      />
+                    </Form.Item>
 
-                  <MinusCircleOutlined
-                    onClick={() => {
-                      remove(field.name)
-                    }}
-                  />
-                </Space>
+                    <MinusCircleOutlined
+                      onClick={() => {
+                        remove(field.name)
+                      }}
+                    />
+                  </Space>
+
+                  <Collapse>
+                    <Panel key="1" header="Settings">
+                      <Form.Item
+                        {...field}
+                        label="First Order Amount"
+                        name={[field.name, 'AMOUNT']}
+                        fieldKey={[field.fieldKey, 'AMOUNT']}
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please enter your initial order amount',
+                          },
+                        ]}
+                      >
+                        <Input />
+                      </Form.Item>
+
+                      <Form.Item
+                        {...field}
+                        label="First order price type"
+                        name={[field.name, 'PRICE_TYPE']}
+                        fieldKey={[field.fieldKey, 'PRICE_TYPE']}
+                        rules={[
+                          {
+                            required: false,
+                            message: 'Please enter your initial order price',
+                          },
+                        ]}
+                      >
+                        <Radio.Group
+                          options={[
+                            { label: 'Price Distance', value: 'distance' },
+                            { label: 'Price', value: 'price' },
+                          ]}
+                          optionType="button"
+                          buttonStyle="solid"
+                          defaultValue="distance"
+                        />
+                      </Form.Item>
+
+                      <Form.Item noStyle shouldUpdate={() => true}>
+                        {({ getFieldValue }) =>
+                          getFieldValue('POSITIONS')[field.name].PRICE_TYPE === 'distance' && (
+                            <Form.Item
+                              {...field}
+                              label="First Order Price Distance"
+                              name={[field.name, 'PRICE_DISTANCE']}
+                              fieldKey={[field.fieldKey, 'PRICE_DISTANCE']}
+                              rules={[
+                                {
+                                  required: true,
+                                  message:
+                                    'Please enter your initial order price distance from quote price',
+                                },
+                              ]}
+                            >
+                              <Input />
+                            </Form.Item>
+                          )
+                        }
+                      </Form.Item>
+
+                      <Form.Item noStyle shouldUpdate={() => true}>
+                        {({ getFieldValue }) =>
+                          getFieldValue('POSITIONS')[field.name].PRICE_TYPE === 'price' && (
+                            <Form.Item
+                              {...field}
+                              label="First Order Price"
+                              name={[field.name, 'PRICE']}
+                              fieldKey={[field.fieldKey, 'PRICE']}
+                              rules={[
+                                {
+                                  required: true,
+                                  message: 'Please enter your initial order price',
+                                },
+                              ]}
+                            >
+                              <Input />
+                            </Form.Item>
+                          )
+                        }
+                      </Form.Item>
+
+                      <p>
+                        <strong>Price and amount grid:</strong>
+                        <br />
+                        Orders will be created based on price step and x amount
+                      </p>
+
+                      <Radio.Group
+                        options={Object.keys(grids).map((item) => ({ label: item, value: item }))}
+                        optionType="button"
+                        buttonStyle="solid"
+                        onChange={(e) => {
+                          const { POSITIONS } = form.getFieldsValue()
+                          POSITIONS[field.name].GRID = grids[e.target.value]
+                          form.setFieldsValue({ POSITIONS })
+                        }}
+                      />
+
+                      <Form.List name={[field.name, 'GRID']}>
+                        {(gridFields, { add, remove }) => {
+                          return (
+                            <div>
+                              {gridFields.map((gridField) => (
+                                <Space key={gridField.key} size="small" align="center">
+                                  <Form.Item
+                                    {...gridField}
+                                    label="Price Step"
+                                    name={[gridField.name, 'PRICE_STEP']}
+                                    fieldKey={[gridField.fieldKey, 'PRICE_STEP']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="20" />
+                                  </Form.Item>
+                                  <Form.Item
+                                    {...gridField}
+                                    label="X Amount"
+                                    name={[gridField.name, 'X_AMOUNT']}
+                                    fieldKey={[gridField.fieldKey, 'X_AMOUNT']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="2" />
+                                  </Form.Item>
+
+                                  <MinusCircleOutlined
+                                    onClick={() => {
+                                      remove(gridField.name)
+                                    }}
+                                  />
+                                </Space>
+                              ))}
+
+                              <Form.Item>
+                                <Button
+                                  type="dashed"
+                                  onClick={() => {
+                                    add()
+                                  }}
+                                  block
+                                >
+                                  <PlusOutlined /> Add grid row
+                                </Button>
+                              </Form.Item>
+                            </div>
+                          )
+                        }}
+                      </Form.List>
+
+                      <p>
+                        <strong>Take Profit:</strong>
+                        <br />
+                        Percentage range for take profit orders
+                      </p>
+
+                      <Space size="small" align="center">
+                        <Form.Item
+                          {...field}
+                          label="From %"
+                          name={[field.name, 'TP_MIN_PERCENT']}
+                          fieldKey={[field.fieldKey, 'TP_MIN_PERCENT']}
+                          rules={[
+                            {
+                              required: true,
+                              message: 'Please enter your take profit % value',
+                            },
+                          ]}
+                        >
+                          <Input />
+                        </Form.Item>
+
+                        <Form.Item
+                          {...field}
+                          label="To %"
+                          name={[field.name, 'TP_MAX_PERCENT']}
+                          fieldKey={[field.fieldKey, 'TP_MAX_PERCENT']}
+                          rules={[
+                            {
+                              required: true,
+                              message: 'Please enter your take profit % value',
+                            },
+                          ]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Space>
+
+                      <Form.Item
+                        {...field}
+                        label="Take Profit orders (maximum)"
+                        name={[field.name, 'TP_MAX_COUNT']}
+                        fieldKey={[field.fieldKey, 'TP_MAX_COUNT']}
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please enter max number of take profit orders',
+                          },
+                        ]}
+                      >
+                        <Input />
+                      </Form.Item>
+
+                      <p>
+                        <strong>Stop Without Loss:</strong>
+                        <br />
+                        Percentage when to add trailing stop loss and minumum when close position
+                      </p>
+
+                      <Space size="small" align="center">
+                        <Form.Item
+                          {...field}
+                          label="Trigger %"
+                          name={[field.name, 'SP_PERCENT_TRIGGER']}
+                          fieldKey={[field.fieldKey, 'SP_PERCENT_TRIGGER']}
+                          rules={[
+                            {
+                              required: true,
+                              message: 'Please enter your stop profit % trigger value',
+                            },
+                          ]}
+                        >
+                          <Input />
+                        </Form.Item>
+
+                        <Form.Item
+                          {...field}
+                          label="Minimum %"
+                          name={[field.name, 'SP_PERCENT']}
+                          fieldKey={[field.fieldKey, 'SP_PERCENT']}
+                          rules={[
+                            {
+                              required: true,
+                              message: 'Please enter your stop profit % value',
+                            },
+                          ]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Space>
+
+                      <Form.Item
+                        {...field}
+                        label="Stop Loss %"
+                        name={[field.name, 'SL_PERCENT']}
+                        fieldKey={[field.fieldKey, 'SL_PERCENT']}
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please enter your stop loss % value',
+                          },
+                        ]}
+                      >
+                        <Input />
+                      </Form.Item>
+
+                      <p>
+                        <strong>Pause bot:</strong>
+                        <br />
+                        Conditions when bot won't open new positions
+                      </p>
+
+                      <Space size="small" align="center">
+                        <Form.Item
+                          {...field}
+                          label="Closed positions"
+                          name={[field.name, 'TRADES_COUNT']}
+                          fieldKey={[field.fieldKey, 'TRADES_COUNT']}
+                        >
+                          <Input disabled />
+                        </Form.Item>
+                        of
+                        <Form.Item
+                          label="Max positions"
+                          name={[field.name, 'TRADES_TILL_STOP']}
+                          fieldKey={[field.fieldKey, 'TRADES_TILL_STOP']}
+                          rules={[
+                            {
+                              required: true,
+                              message: 'Please enter number of trades to pause bot',
+                            },
+                          ]}
+                        >
+                          <Input />
+                        </Form.Item>
+                      </Space>
+
+                      <Form.Item
+                        {...field}
+                        label="Date range"
+                        name={[field.name, 'DATETIME_RANGE']}
+                        fieldKey={[field.fieldKey, 'DATETIME_RANGE']}
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please enter date time range to run bot',
+                          },
+                        ]}
+                      >
+                        <RangePicker showTime />
+                      </Form.Item>
+                    </Panel>
+                  </Collapse>
+                  <br />
+                </div>
               ))}
 
               <Form.Item>
@@ -115,7 +440,7 @@ const Main = ({ onSuccess }) => {
                   }}
                   block
                 >
-                  <PlusOutlined /> Add grid row
+                  <PlusOutlined /> Add Symbol and Position Side
                 </Button>
               </Form.Item>
             </div>
@@ -123,105 +448,7 @@ const Main = ({ onSuccess }) => {
         }}
       </Form.List>
 
-      <Form.Item
-        label="Take Profit minimum %"
-        name="TP_MIN_PERCENT"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your take profit % value',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item
-        label="Take Profit maximum %"
-        name="TP_MAX_PERCENT"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your take profit % value',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item
-        label="Take Profit maximum number of orders"
-        name="TP_MAX_COUNT"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter max number of take profit orders',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item
-        label="Stop Profit %"
-        name="SP_PERCENT"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your stop profit % value',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item
-        label="Stop Profit % Trigger"
-        name="SP_PERCENT_TRIGGER"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your stop profit % trigger value',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item
-        label="Stop Loss %"
-        name="SL_PERCENT"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter your stop loss % value',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item
-        label="Number of closed positions"
-        name="TRADES_COUNT"
-      >
-        <Input disabled />
-      </Form.Item>
-
-      <Form.Item
-        label="Number of closed positions till pause bot"
-        name="TRADES_TILL_STOP"
-        rules={[
-          {
-            required: true,
-            message: 'Please enter number of trades to pause bot',
-          },
-        ]}
-      >
-        <Input />
-      </Form.Item>
-
-      <Form.Item {...tailLayout}>
+      <Form.Item>
         <Button type="primary" htmlType="submit">
           Save
         </Button>
@@ -230,4 +457,4 @@ const Main = ({ onSuccess }) => {
   )
 }
 
-export default Main
+export default Settings
