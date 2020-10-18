@@ -14,12 +14,12 @@ const {
   getPosSize,
 } = require('./functions')
 
-const start = async (contents) => {
+const start = async (index, contents) => {
   const store = new Store()
-  let config = store.get()
+  let config = store.get().POSITIONS[index]
 
   setInterval(() => {
-    config = store.get()
+    config = store.get().POSITIONS[index]
   }, 10 * 1000)
 
   const state = {
@@ -29,8 +29,8 @@ const start = async (contents) => {
   }
 
   const binance = Binance({
-    APIKEY: config.APIKEY,
-    APISECRET: config.APISECRET,
+    APIKEY: store.get().APIKEY,
+    APISECRET: store.get().APISECRET,
   })
 
   const cancelOrders = async () => {
@@ -374,8 +374,8 @@ const start = async (contents) => {
     state.tpOrders = []
     state.slOrder = null
     cancelOrders()
-    store.set({ TRADES_COUNT: config.TRADES_COUNT + 1 })
-    config = store.get()
+    store.set(`POSITIONS[${index}].TRADES_COUNT`, config.TRADES_COUNT + 1)
+    config = store.get().POSITIONS[index]
   }
 
   const accountUpdate = async (data) => {

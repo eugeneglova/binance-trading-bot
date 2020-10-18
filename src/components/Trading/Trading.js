@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Table } from 'antd'
+import { Button, Table, Space } from 'antd'
 import { ipcRenderer } from 'electron'
+import Store from 'electron-store'
 
 import { precision, getPLPerc } from '../../electron/functions'
 
-const Trading = ({ isRunning, onStart, onStop }) => {
+const Trading = ({ isRunning = [], onStart, onStop }) => {
+  const store = new Store()
+  const config = store.get()
+
   const [state, setBotState] = useState({})
   useEffect(() => {
     ipcRenderer.on('onPositionUpdate', (event, value) => setBotState(value))
@@ -64,67 +68,76 @@ const Trading = ({ isRunning, onStart, onStop }) => {
       title: 'Price',
       dataIndex: 'price',
       key: 'price',
-      render: (price, o) => precision(parseFloat(o.stopPrice) ? o.stopPrice : price, state.pricePrecision),
+      render: (price, o) =>
+        precision(parseFloat(o.stopPrice) ? o.stopPrice : price, state.pricePrecision),
     },
   ]
 
   return (
     <div>
       <div>
-        <Button
-          type="primary"
-          onClick={() => {
-            onStart()
-          }}
-          disabled={isRunning}
-        >
-          Start
-        </Button>
-        <Button
-          type="primary"
-          onClick={() => {
-            onStop()
-          }}
-          disabled={!isRunning}
-        >
-          Stop
-        </Button>
+        {config.POSITIONS.map((pos, index) => (
+          <div>
+            <Space>
+              <span>{pos.SYMBOL}</span>
+              <span>{pos.SIDE}</span>
+              <Button
+                type="primary"
+                onClick={() => {
+                  onStart(index)
+                }}
+                disabled={isRunning[index]}
+              >
+                Start
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  onStop(index)
+                }}
+                disabled={!isRunning[index]}
+              >
+                Stop
+              </Button>
+            </Space>
+
+            {isRunning[index] && (
+              <div>
+                {state.position && (
+                  <div>
+                    Position
+                    <Table columns={posColumns} dataSource={[state.position]} />
+                  </div>
+                )}
+                {state.tpOrders && (
+                  <div>
+                    Take Profit Orders
+                    <Table columns={orderColumns} dataSource={state.tpOrders} />
+                  </div>
+                )}
+                {state.spOrder && (
+                  <div>
+                    Stop Without Loss Order
+                    <Table columns={orderColumns} dataSource={[state.spOrder]} />
+                  </div>
+                )}
+                {state.lOrders && (
+                  <div>
+                    Limit Orders
+                    <Table columns={orderColumns} dataSource={state.lOrders} />
+                  </div>
+                )}
+                {state.slOrder && (
+                  <div>
+                    Stop Loss Order
+                    <Table columns={orderColumns} dataSource={[state.slOrder]} />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
-      <br />
-      {isRunning && (
-        <div>
-          {state.position && (
-            <div>
-              Position
-              <Table columns={posColumns} dataSource={[state.position]} />
-            </div>
-          )}
-          {state.tpOrders && (
-            <div>
-              Take Profit Orders
-              <Table columns={orderColumns} dataSource={state.tpOrders} />
-            </div>
-          )}
-          {state.spOrder && (
-            <div>
-              Stop Without Loss Order
-              <Table columns={orderColumns} dataSource={[state.spOrder]} />
-            </div>
-          )}
-          {state.lOrders && (
-            <div>
-              Limit Orders
-              <Table columns={orderColumns} dataSource={state.lOrders} />
-            </div>
-          )}
-          {state.slOrder && (
-            <div>
-              Stop Loss Order
-              <Table columns={orderColumns} dataSource={[state.slOrder]} />
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }
