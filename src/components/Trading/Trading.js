@@ -3,7 +3,7 @@ import { Button, Table, Space } from 'antd'
 import { ipcRenderer } from 'electron'
 import Store from 'electron-store'
 
-import { precision, getPLPerc } from '../../electron/functions'
+const { precision, getPLPerc } = require('../../electron/functions')
 
 const Trading = ({ isRunning = [], onStart, onStop }) => {
   const store = new Store()
