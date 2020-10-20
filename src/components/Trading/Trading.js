@@ -3,7 +3,22 @@ import { Button, Table, Space } from 'antd'
 import { ipcRenderer } from 'electron'
 import Store from 'electron-store'
 
-const { precision, getPLPerc } = require('../../electron/functions')
+const getDecimals = (value) => {
+  const absValue = Math.abs(value)
+  if (absValue < 0.0005) return 6
+  if (absValue < 0.005) return 5
+  if (absValue < 0.05) return 4
+  if (absValue < 0.5) return 3
+  if (absValue < 1) return 2
+  if (absValue < 1000) return 2
+  if (absValue < 10000) return 1
+  return 0
+}
+
+const precision = (value, decimals = getDecimals(value)) =>
+  Math.floor(value * 10 ** decimals) / 10 ** decimals
+
+const getPLPerc = (basePrice, price, sideSign) => ((price / basePrice - 1) / sideSign) * 100
 
 const Trading = ({ isRunning = [], onStart, onStop }) => {
   const store = new Store()
