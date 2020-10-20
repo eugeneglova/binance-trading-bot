@@ -12,8 +12,12 @@ const getDecimals = (value) => {
   return 0
 }
 
-const precision = (value, decimals = getDecimals(value)) =>
-  Math.floor(value * 10 ** decimals) / 10 ** decimals
+const precision = (value, decimals = getDecimals(value)) => {
+  const x = 10 ** decimals
+  const a = value * x
+  const b = a < 0 ? Math.floor(a) : Math.ceil(a)
+  return b / x
+}
 
 const getPLPrice = (basePrice, plPercent, sideSign) =>
   basePrice + sideSign * (plPercent / 100) * basePrice
@@ -176,12 +180,12 @@ const getTpOrders = ({
 }
 
 // console.log(getTpOrders({
-//   amount: 0.02,
+//   amount: 0.029,
 //   minAmount: 0.001,
 //   minPrice: 11327.48,
 //   maxPrice: 11385.73,
-//   sideSign: 1,
-//   maxOrders: 8,
+//   sideSign: -1,
+//   maxOrders: 6,
 //   pricePrecision: 2,
 //   quantityPrecision: 3,
 // }))
