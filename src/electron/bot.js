@@ -207,7 +207,7 @@ const start = async (index, contents) => {
     )
 
     // const posSize = Math.log(Math.abs(parseFloat(p.positionAmt)) / AMOUNT) / Math.log(2) + 1
-    const posSize = getPosSize(parseFloat(p.positionAmt), config.AMOUNT, config.GRID.length + 1, config.GRID)
+    const posSize = getPosSize(Math.abs(parseFloat(p.positionAmt)), config.AMOUNT, config.GRID.length + 1, config.GRID)
     // make tp closer to base price to minimize risks after 3rd order
     // const numOfRiskOrders = 3
     // const tpDistanceCoefficient =
@@ -223,7 +223,7 @@ const start = async (index, contents) => {
       ? getPosSize(Math.abs(minLOrder.origQty), config.AMOUNT, config.GRID.length + 1, config.GRID)
       : Infinity
     // when pos size less than closest limit order we need update orders
-    // console.log({ minLOrderSize , posSize, c1: minLOrderSize - posSize })
+    // console.log({ amt: p.positionAmt, minLOrderSize , posSize, c1: minLOrderSize - posSize })
     if (minLOrderSize - posSize >= 1 && posSize >= 1) {
       await Promise.allSettled(
         state.lOrders.map(({ orderId }) =>
