@@ -86,9 +86,9 @@ const getOrders = ({
 
 // const x = getOrders({
 //   price: 11350,
-//   amount: 0.005,
+//   amount: 0.002,
 //   count: 7,
-//   sideSign: -1,
+//   sideSign: 1,
 //   grid: [
 //     { PRICE_STEP: 20, X_AMOUNT: 1 },
 //     { PRICE_STEP: 20, X_AMOUNT: 3 },
@@ -134,7 +134,17 @@ const getPosSize = (
   // return Math.log(Math.abs(parseFloat(positionAmount)) / initAmount) / Math.log(2) + 1
 }
 
-// console.log(getPosSize(375, 125, 7, [1, 3, 3, 1.6, 1.6, 2]))
+// const grid = [
+//   { PRICE_STEP: 20, X_AMOUNT: 1 },
+//   { PRICE_STEP: 20, X_AMOUNT: 3 },
+//   { PRICE_STEP: 50, X_AMOUNT: 3 },
+//   { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+//   { PRICE_STEP: 80, X_AMOUNT: 1.6 },
+//   { PRICE_STEP: 120, X_AMOUNT: 2 },
+// ]
+// console.log(getPosSize(0.008, 0.002, 7, grid))
+// console.log(getPosSize(0.018, 0.002, 7, grid))
+// console.log(getPosSize(0.028, 0.002, 7, grid))
 
 const getOrdersAmount = (orders, key = 'origQty') =>
   _.reduce(orders, (acc, order) => acc + parseFloat(order[key]), 0)

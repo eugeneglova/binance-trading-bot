@@ -209,22 +209,22 @@ const start = async (index, contents) => {
     // const posSize = Math.log(Math.abs(parseFloat(p.positionAmt)) / AMOUNT) / Math.log(2) + 1
     const posSize = getPosSize(parseFloat(p.positionAmt), config.AMOUNT, config.GRID.length + 1, config.GRID)
     // make tp closer to base price to minimize risks after 3rd order
-    const numOfRiskOrders = 3
-    const tpDistanceCoefficient =
-      posSize > numOfRiskOrders ? 1 / (posSize - numOfRiskOrders / 2) : 1
-    const price = precision(
-      getPLPrice(p.entryPrice, (config.TP_MAX_PERCENT + plus) * tpDistanceCoefficient, SIDE_SIGN),
-      state.pricePrecision,
-    )
+    // const numOfRiskOrders = 3
+    // const tpDistanceCoefficient =
+    //   posSize > numOfRiskOrders ? 1 / (posSize - numOfRiskOrders / 2) : 1
+    // const price = precision(
+    //   getPLPrice(p.entryPrice, (config.TP_MAX_PERCENT + plus) * tpDistanceCoefficient, SIDE_SIGN),
+    //   state.pricePrecision,
+    // )
     const amount = Math.max(Math.abs(parseFloat(p.positionAmt)), 1 / Math.pow(10, state.quantityPrecision))
 
     const minLOrder = _.minBy(state.lOrders, (o) => parseFloat(o.origQty))
-    const minLOrderSize =
-      minLOrder && Math.log(Math.abs(minLOrder.origQty) / config.AMOUNT) / Math.log(2) + 1
+    const minLOrderSize = minLOrder
+      ? getPosSize(Math.abs(minLOrder.origQty), config.AMOUNT, config.GRID.length + 1, config.GRID)
+      : Infinity
     // when pos size less than closest limit order we need update orders
     // console.log({ minLOrderSize , posSize, c1: minLOrderSize - posSize })
-    // if (minLOrderSize - posSize >= 1 && posSize >= 1) {
-    if (minLOrderSize - posSize >= 1.7 && posSize >= 1) {
+    if (minLOrderSize - posSize >= 1 && posSize >= 1) {
       await Promise.allSettled(
         state.lOrders.map(({ orderId }) =>
           binance.futures
