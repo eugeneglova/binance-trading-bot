@@ -224,7 +224,7 @@ const start = async (index, contents) => {
       : Infinity
     // when pos size less than closest limit order we need update orders
     // console.log({ amt: p.positionAmt, minLOrderSize , posSize, c1: minLOrderSize - posSize })
-    if (minLOrderSize - posSize >= 1 && posSize >= 1) {
+    if (minLOrderSize - posSize >= 1.1 && posSize >= 1) {
       await Promise.allSettled(
         state.lOrders.map(({ orderId }) =>
           binance.futures
