@@ -55,6 +55,17 @@ const grids = {
   ],
 }
 
+const tpGrids = {
+  default: [
+    { MIN_PERCENT: 0.25, MAX_PERCENT: 0.6, MAX_COUNT: 6 },
+    { MIN_PERCENT: 0.2, MAX_PERCENT: 0.6, MAX_COUNT: 6 },
+    { MIN_PERCENT: 0.18, MAX_PERCENT: 0.6, MAX_COUNT: 5 },
+    { MIN_PERCENT: 0.14, MAX_PERCENT: 0.5, MAX_COUNT: 4 },
+    { MIN_PERCENT: 0.11, MAX_PERCENT: 0.4, MAX_COUNT: 3 },
+    { MIN_PERCENT: 0.1, MAX_PERCENT: 0.3, MAX_COUNT: 3 },
+  ]
+}
+
 const Settings = () => {
   const store = new Store()
   const config = store.get()
@@ -280,6 +291,17 @@ const Settings = () => {
                         <br />
                         Percentage range for take profit orders based on position size
                       </p>
+
+                      <Radio.Group
+                        options={Object.keys(tpGrids).map((item) => ({ label: item, value: item }))}
+                        optionType="button"
+                        buttonStyle="solid"
+                        onChange={(e) => {
+                          const { POSITIONS } = form.getFieldsValue()
+                          POSITIONS[field.name].TP_GRID = tpGrids[e.target.value]
+                          form.setFieldsValue({ POSITIONS })
+                        }}
+                      />
 
                       <Form.List name={[field.name, 'TP_GRID']}>
                         {(gridFields, { add, remove }) => {
