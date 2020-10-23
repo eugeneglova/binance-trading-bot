@@ -276,57 +276,68 @@ const Settings = () => {
                       </Form.List>
 
                       <p>
-                        <strong>Take Profit:</strong>
+                        <strong>Take Profit grid:</strong>
                         <br />
-                        Percentage range for take profit orders
+                        Percentage range for take profit orders based on position size
                       </p>
 
-                      <Space size="small" align="center">
-                        <Form.Item
-                          {...field}
-                          label="From %"
-                          name={[field.name, 'TP_MIN_PERCENT']}
-                          fieldKey={[field.fieldKey, 'TP_MIN_PERCENT']}
-                          rules={[
-                            {
-                              required: true,
-                              message: 'Please enter your take profit % value',
-                            },
-                          ]}
-                        >
-                          <Input />
-                        </Form.Item>
+                      <Form.List name={[field.name, 'TP_GRID']}>
+                        {(gridFields, { add, remove }) => {
+                          return (
+                            <div>
+                              {gridFields.map((gridField) => (
+                                <Space key={gridField.key} size="small" align="center">
+                                  <Form.Item
+                                    {...gridField}
+                                    label="From %"
+                                    name={[gridField.name, 'MIN_PERCENT']}
+                                    fieldKey={[gridField.fieldKey, 'MIN_PERCENT']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="0.15" />
+                                  </Form.Item>
+                                  <Form.Item
+                                    {...gridField}
+                                    label="To %"
+                                    name={[gridField.name, 'MAX_PERCENT']}
+                                    fieldKey={[gridField.fieldKey, 'MAX_PERCENT']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="0.6" />
+                                  </Form.Item>
+                                  <Form.Item
+                                    {...gridField}
+                                    label="Orders (maximum)"
+                                    name={[gridField.name, 'MAX_COUNT']}
+                                    fieldKey={[gridField.fieldKey, 'MAX_COUNT']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="6" />
+                                  </Form.Item>
 
-                        <Form.Item
-                          {...field}
-                          label="To %"
-                          name={[field.name, 'TP_MAX_PERCENT']}
-                          fieldKey={[field.fieldKey, 'TP_MAX_PERCENT']}
-                          rules={[
-                            {
-                              required: true,
-                              message: 'Please enter your take profit % value',
-                            },
-                          ]}
-                        >
-                          <Input />
-                        </Form.Item>
-                      </Space>
+                                  <MinusCircleOutlined
+                                    onClick={() => {
+                                      remove(gridField.name)
+                                    }}
+                                  />
+                                </Space>
+                              ))}
 
-                      <Form.Item
-                        {...field}
-                        label="Take Profit orders (maximum)"
-                        name={[field.name, 'TP_MAX_COUNT']}
-                        fieldKey={[field.fieldKey, 'TP_MAX_COUNT']}
-                        rules={[
-                          {
-                            required: true,
-                            message: 'Please enter max number of take profit orders',
-                          },
-                        ]}
-                      >
-                        <Input />
-                      </Form.Item>
+                              <Form.Item>
+                                <Button
+                                  type="dashed"
+                                  onClick={() => {
+                                    add()
+                                  }}
+                                  block
+                                >
+                                  <PlusOutlined /> Add take profit grid row
+                                </Button>
+                              </Form.Item>
+                            </div>
+                          )
+                        }}
+                      </Form.List>
 
                       <p>
                         <strong>Stop Without Loss:</strong>

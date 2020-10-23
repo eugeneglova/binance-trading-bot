@@ -87,16 +87,19 @@ const start = async (index, contents) => {
 
   const createTpOrders = async () => {
     const p = state.position
+    const posSize = getPosSize(Math.abs(parseFloat(p.positionAmt)), config.AMOUNT, config.GRID.length + 1, config.GRID)
+    const gridIndex = Math.min(Math.max(1, Math.round(posSize)), config.TP_GRID.length - 1) - 1
+    console.log({ posSize, gridIndex })
     const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
-    const minPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_MIN_PERCENT, SIDE_SIGN)
-    const maxPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_MAX_PERCENT, SIDE_SIGN)
+    const minPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_GRID[gridIndex].MIN_PERCENT, SIDE_SIGN)
+    const maxPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_GRID[gridIndex].MAX_PERCENT, SIDE_SIGN)
     const orders = getTpOrders({
       amount: parseFloat(p.positionAmt),
       minAmount: 1 / Math.pow(10, state.quantityPrecision),
       minPrice,
       maxPrice,
       sideSign: SIDE_SIGN,
-      maxOrders: config.TP_MAX_COUNT,
+      maxOrders: config.TP_GRID[gridIndex].MAX_COUNT,
       pricePrecision: state.pricePrecision,
       quantityPrecision: state.quantityPrecision,
     })
