@@ -33,12 +33,7 @@ const start = async (index, contents) => {
     APISECRET: store.get().APISECRET,
   })
 
-  const cancelOrders = async () => {
-    const allOpenOrders = await binance.futures
-      .openOrders(config.SYMBOL)
-      .catch((e) => console.error(new Error().stack) || console.error(e))
-    const orders = _.filter(allOpenOrders, (o) => config.SIDE === 'AUTO' ? true : o.positionSide === config.SIDE)
-    // console.log(orders)
+  const cancelOrders = async (orders) => {
     return Promise.allSettled(
       orders.map(({ orderId }) =>
         binance.futures
@@ -46,6 +41,14 @@ const start = async (index, contents) => {
           .catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     )
+  }
+
+  const cancelOpenOrders = async () => {
+    const allOpenOrders = await binance.futures
+      .openOrders(config.SYMBOL)
+      .catch((e) => console.error(new Error().stack) || console.error(e))
+    const orders = _.filter(allOpenOrders, (o) => config.SIDE === 'AUTO' ? true : o.positionSide === config.SIDE)
+    return cancelOrders(orders)
   }
 
   const createOrders = async (positionSide) => {
@@ -113,12 +116,12 @@ const start = async (index, contents) => {
     createTpOrders()
   }
 
-  const onPositionUpdate = async () => {
+  const onPositionUpdateOriginal = async () => {
     // console.log('UPDATE POS')
     const p = state.position
     const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
     // console.log(p)
-    contents.send('onPositionUpdate', state)
+    contents.send('onPositionUpdate', { index, state })
     const plPerc = getPLPerc(p.entryPrice, p.markPrice, SIDE_SIGN)
     if (!state.lOrders.length) {
       await (async () => {
@@ -185,7 +188,7 @@ const start = async (index, contents) => {
           .openOrders(config.SYMBOL)
           .catch((e) => console.error(new Error().stack) || console.error(e))
         const slSide = SIDE_SIGN < 0 ? 'BUY' : 'SELL'
-        const order = _.find(
+        const orders = _.filter(
           allOpenOrders,
           (o) =>
             o.positionSide === p.positionSide &&
@@ -193,9 +196,11 @@ const start = async (index, contents) => {
             o.side === slSide &&
             Math.sign(parseFloat(o.stopPrice) - parseFloat(p.entryPrice)) !== SIDE_SIGN,
         )
-        if (!order) return
+        if (!orders.length) return
+        const order = _.first(orders)
         console.log('sl:', order.origQty, order.stopPrice)
         state.slOrder = order
+        cancelOrders(_.tail(orders))
       })()
     }
 
@@ -223,7 +228,7 @@ const start = async (index, contents) => {
       ? getPosSize(Math.abs(minLOrder.origQty), config.AMOUNT, config.GRID.length + 1, config.GRID)
       : Infinity
     // when pos size less than closest limit order we need update orders
-    // console.log({ amt: p.positionAmt, minLOrderSize , posSize, c1: minLOrderSize - posSize })
+    console.log({ amt: p.positionAmt, minLOrderSize , posSize, c1: minLOrderSize - posSize })
     if (minLOrderSize - posSize >= 1.1 && posSize >= 1) {
       await Promise.allSettled(
         state.lOrders.map(({ orderId }) =>
@@ -368,12 +373,14 @@ const start = async (index, contents) => {
     }
   }
 
+  const onPositionUpdate = _.debounce(onPositionUpdateOriginal, 1000)
+
   const onPositionClose = async () => {
     console.log('CLOSE POS')
     state.lOrders = []
     state.tpOrders = []
     state.slOrder = null
-    cancelOrders()
+    cancelOpenOrders()
     store.set(`POSITIONS[${index}].TRADES_COUNT`, config.TRADES_COUNT + 1)
     config = store.get().POSITIONS[index]
   }
@@ -472,7 +479,7 @@ const start = async (index, contents) => {
   if (p) {
     state.position = p
   } else {
-    await cancelOrders()
+    await cancelOpenOrders()
     if (config.SIDE === 'AUTO') {
       createOrders('LONG')
       createOrders('SHORT')
@@ -488,7 +495,7 @@ const start = async (index, contents) => {
     if (config.TRADES_COUNT >= config.TRADES_TILL_STOP) return
     if (moment().isBefore(config.DATETIME_RANGE[0]) || moment().isAfter(config.DATETIME_RANGE[1])) return
     console.log('create orders by position timeout')
-    await cancelOrders()
+    await cancelOpenOrders()
     if (config.SIDE === 'AUTO') {
       createOrders('LONG')
       createOrders('SHORT')

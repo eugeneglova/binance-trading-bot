@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Table, Space } from 'antd'
+import { Button, Table, Space, Collapse } from 'antd'
 import { ipcRenderer } from 'electron'
 import Store from 'electron-store'
+
+const { Panel } = Collapse
 
 const getDecimals = (value) => {
   const absValue = Math.abs(value)
@@ -24,12 +26,17 @@ const Trading = ({ isRunning = [], onStart, onStop }) => {
   const store = new Store()
   const config = store.get()
 
-  const [state, setBotState] = useState({})
+  const [botState, setBotState] = useState({})
   useEffect(() => {
-    ipcRenderer.on('onPositionUpdate', (event, value) => setBotState(value))
+    ipcRenderer.on('onPositionUpdate', (event, { index, state }) => {
+      setBotState((prevBotState) => ({
+        ...prevBotState,
+        [index]: state,
+      }))
+    })
   }, [])
 
-  const posColumns = [
+  const getPosColumns = (state) => [
     {
       title: 'Symbol',
       dataIndex: 'symbol',
@@ -66,7 +73,7 @@ const Trading = ({ isRunning = [], onStart, onStop }) => {
     },
   ]
 
-  const orderColumns = [
+  const getOrderColumns = (state) => [
     {
       title: 'Symbol',
       dataIndex: 'symbol',
@@ -114,40 +121,70 @@ const Trading = ({ isRunning = [], onStart, onStop }) => {
               >
                 Stop
               </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  onStop(index)
+                  onStart(index)
+                }}
+                disabled={!isRunning[index]}
+              >
+                Restart
+              </Button>
             </Space>
 
             {isRunning[index] && (
               <div>
-                {state.position && (
+                {botState[index] && botState[index].position && (
                   <div>
                     Position
-                    <Table columns={posColumns} dataSource={[state.position]} />
+                    <Table
+                      columns={getPosColumns(botState[index])}
+                      dataSource={[botState[index].position]}
+                    />
                   </div>
                 )}
-                {state.tpOrders && (
-                  <div>
-                    Take Profit Orders
-                    <Table columns={orderColumns} dataSource={state.tpOrders} />
-                  </div>
-                )}
-                {state.spOrder && (
-                  <div>
-                    Stop Without Loss Order
-                    <Table columns={orderColumns} dataSource={[state.spOrder]} />
-                  </div>
-                )}
-                {state.lOrders && (
-                  <div>
-                    Limit Orders
-                    <Table columns={orderColumns} dataSource={state.lOrders} />
-                  </div>
-                )}
-                {state.slOrder && (
-                  <div>
-                    Stop Loss Order
-                    <Table columns={orderColumns} dataSource={[state.slOrder]} />
-                  </div>
-                )}
+                <Collapse>
+                  <Panel key={index} header="orders">
+                    {botState[index] && botState[index].tpOrders && (
+                      <div>
+                        Take Profit Orders
+                        <Table
+                          columns={getOrderColumns(botState[index])}
+                          dataSource={botState[index].tpOrders}
+                        />
+                      </div>
+                    )}
+                    {botState[index] && botState[index].spOrder && (
+                      <div>
+                        Stop Without Loss Order
+                        <Table
+                          columns={getOrderColumns(botState[index])}
+                          dataSource={[botState[index].spOrder]}
+                        />
+                      </div>
+                    )}
+                    {botState[index] && botState[index].lOrders && (
+                      <div>
+                        Limit Orders
+                        <Table
+                          columns={getOrderColumns(botState[index])}
+                          dataSource={botState[index].lOrders}
+                        />
+                      </div>
+                    )}
+                    {botState[index] && botState[index].slOrder && (
+                      <div>
+                        Stop Loss Order
+                        <Table
+                          columns={getOrderColumns(botState[index])}
+                          dataSource={[botState[index].slOrder]}
+                        />
+                      </div>
+                    )}
+                  </Panel>
+                </Collapse>
+                <br />
               </div>
             )}
           </div>
