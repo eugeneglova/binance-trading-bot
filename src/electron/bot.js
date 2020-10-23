@@ -33,12 +33,7 @@ const start = async (index, contents) => {
     APISECRET: store.get().APISECRET,
   })
 
-  const cancelOrders = async () => {
-    const allOpenOrders = await binance.futures
-      .openOrders(config.SYMBOL)
-      .catch((e) => console.error(new Error().stack) || console.error(e))
-    const orders = _.filter(allOpenOrders, (o) => config.SIDE === 'AUTO' ? true : o.positionSide === config.SIDE)
-    // console.log(orders)
+  const cancelOrders = async (orders) => {
     return Promise.allSettled(
       orders.map(({ orderId }) =>
         binance.futures
@@ -46,6 +41,14 @@ const start = async (index, contents) => {
           .catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     )
+  }
+
+  const cancelOpenOrders = async () => {
+    const allOpenOrders = await binance.futures
+      .openOrders(config.SYMBOL)
+      .catch((e) => console.error(new Error().stack) || console.error(e))
+    const orders = _.filter(allOpenOrders, (o) => config.SIDE === 'AUTO' ? true : o.positionSide === config.SIDE)
+    return cancelOrders(orders)
   }
 
   const createOrders = async (positionSide) => {
@@ -84,16 +87,19 @@ const start = async (index, contents) => {
 
   const createTpOrders = async () => {
     const p = state.position
+    const posSize = getPosSize(Math.abs(parseFloat(p.positionAmt)), config.AMOUNT, config.GRID.length + 1, config.GRID)
+    const gridIndex = Math.min(Math.max(1, Math.round(posSize)), config.TP_GRID.length - 1) - 1
     const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
-    const minPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_MIN_PERCENT, SIDE_SIGN)
-    const maxPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_MAX_PERCENT, SIDE_SIGN)
+    const minPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_GRID[gridIndex].MIN_PERCENT, SIDE_SIGN)
+    const maxPrice = getPLPrice(parseFloat(p.entryPrice), config.TP_GRID[gridIndex].MAX_PERCENT, SIDE_SIGN)
+    // console.log({ posSize, gridIndex, minPrice, maxPrice, c: config.TP_GRID[gridIndex] })
     const orders = getTpOrders({
       amount: parseFloat(p.positionAmt),
       minAmount: 1 / Math.pow(10, state.quantityPrecision),
       minPrice,
       maxPrice,
       sideSign: SIDE_SIGN,
-      maxOrders: config.TP_MAX_COUNT,
+      maxOrders: config.TP_GRID[gridIndex].MAX_COUNT,
       pricePrecision: state.pricePrecision,
       quantityPrecision: state.quantityPrecision,
     })
@@ -113,12 +119,12 @@ const start = async (index, contents) => {
     createTpOrders()
   }
 
-  const onPositionUpdate = async () => {
+  const onPositionUpdateOriginal = async () => {
     // console.log('UPDATE POS')
     const p = state.position
     const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
     // console.log(p)
-    contents.send('onPositionUpdate', state)
+    contents.send('onPositionUpdate', { index, state })
     const plPerc = getPLPerc(p.entryPrice, p.markPrice, SIDE_SIGN)
     if (!state.lOrders.length) {
       await (async () => {
@@ -185,7 +191,7 @@ const start = async (index, contents) => {
           .openOrders(config.SYMBOL)
           .catch((e) => console.error(new Error().stack) || console.error(e))
         const slSide = SIDE_SIGN < 0 ? 'BUY' : 'SELL'
-        const order = _.find(
+        const orders = _.filter(
           allOpenOrders,
           (o) =>
             o.positionSide === p.positionSide &&
@@ -193,9 +199,11 @@ const start = async (index, contents) => {
             o.side === slSide &&
             Math.sign(parseFloat(o.stopPrice) - parseFloat(p.entryPrice)) !== SIDE_SIGN,
         )
-        if (!order) return
+        if (!orders.length) return
+        const order = _.first(orders)
         console.log('sl:', order.origQty, order.stopPrice)
         state.slOrder = order
+        cancelOrders(_.tail(orders))
       })()
     }
 
@@ -207,24 +215,24 @@ const start = async (index, contents) => {
     )
 
     // const posSize = Math.log(Math.abs(parseFloat(p.positionAmt)) / AMOUNT) / Math.log(2) + 1
-    const posSize = getPosSize(parseFloat(p.positionAmt), config.AMOUNT, config.GRID.length + 1, config.GRID)
+    const posSize = getPosSize(Math.abs(parseFloat(p.positionAmt)), config.AMOUNT, config.GRID.length + 1, config.GRID)
     // make tp closer to base price to minimize risks after 3rd order
-    const numOfRiskOrders = 3
-    const tpDistanceCoefficient =
-      posSize > numOfRiskOrders ? 1 / (posSize - numOfRiskOrders / 2) : 1
-    const price = precision(
-      getPLPrice(p.entryPrice, (config.TP_MAX_PERCENT + plus) * tpDistanceCoefficient, SIDE_SIGN),
-      state.pricePrecision,
-    )
+    // const numOfRiskOrders = 3
+    // const tpDistanceCoefficient =
+    //   posSize > numOfRiskOrders ? 1 / (posSize - numOfRiskOrders / 2) : 1
+    // const price = precision(
+    //   getPLPrice(p.entryPrice, (config.TP_MAX_PERCENT + plus) * tpDistanceCoefficient, SIDE_SIGN),
+    //   state.pricePrecision,
+    // )
     const amount = Math.max(Math.abs(parseFloat(p.positionAmt)), 1 / Math.pow(10, state.quantityPrecision))
 
     const minLOrder = _.minBy(state.lOrders, (o) => parseFloat(o.origQty))
-    const minLOrderSize =
-      minLOrder && Math.log(Math.abs(minLOrder.origQty) / config.AMOUNT) / Math.log(2) + 1
+    const minLOrderSize = minLOrder
+      ? getPosSize(Math.abs(minLOrder.origQty), config.AMOUNT, config.GRID.length + 1, config.GRID)
+      : Infinity
     // when pos size less than closest limit order we need update orders
-    // console.log({ minLOrderSize , posSize, c1: minLOrderSize - posSize })
-    // if (minLOrderSize - posSize >= 1 && posSize >= 1) {
-    if (minLOrderSize - posSize >= 1.7 && posSize >= 1) {
+    console.log({ amt: p.positionAmt, minLOrderSize , posSize, c1: minLOrderSize - posSize })
+    if (minLOrderSize - posSize >= 1.1 && posSize >= 1) {
       await Promise.allSettled(
         state.lOrders.map(({ orderId }) =>
           binance.futures
@@ -368,12 +376,14 @@ const start = async (index, contents) => {
     }
   }
 
+  const onPositionUpdate = _.debounce(onPositionUpdateOriginal, 1000)
+
   const onPositionClose = async () => {
     console.log('CLOSE POS')
     state.lOrders = []
     state.tpOrders = []
     state.slOrder = null
-    cancelOrders()
+    cancelOpenOrders()
     store.set(`POSITIONS[${index}].TRADES_COUNT`, config.TRADES_COUNT + 1)
     config = store.get().POSITIONS[index]
   }
@@ -472,7 +482,7 @@ const start = async (index, contents) => {
   if (p) {
     state.position = p
   } else {
-    await cancelOrders()
+    await cancelOpenOrders()
     if (config.SIDE === 'AUTO') {
       createOrders('LONG')
       createOrders('SHORT')
@@ -488,7 +498,7 @@ const start = async (index, contents) => {
     if (config.TRADES_COUNT >= config.TRADES_TILL_STOP) return
     if (moment().isBefore(config.DATETIME_RANGE[0]) || moment().isAfter(config.DATETIME_RANGE[1])) return
     console.log('create orders by position timeout')
-    await cancelOrders()
+    await cancelOpenOrders()
     if (config.SIDE === 'AUTO') {
       createOrders('LONG')
       createOrders('SHORT')

@@ -12,8 +12,12 @@ const getDecimals = (value) => {
   return 0
 }
 
-const precision = (value, decimals = getDecimals(value)) =>
-  Math.floor(value * 10 ** decimals) / 10 ** decimals
+const precision = (value, decimals = getDecimals(value)) => {
+  const x = 10 ** decimals
+  const a = value * x
+  const b = a < 0 ? Math.floor(a) : Math.ceil(a)
+  return b / x
+}
 
 const getPLPrice = (basePrice, plPercent, sideSign) =>
   basePrice + sideSign * (plPercent / 100) * basePrice
@@ -86,9 +90,9 @@ const getOrders = ({
 
 // const x = getOrders({
 //   price: 11350,
-//   amount: 0.005,
+//   amount: 0.002,
 //   count: 7,
-//   sideSign: -1,
+//   sideSign: 1,
 //   grid: [
 //     { PRICE_STEP: 20, X_AMOUNT: 1 },
 //     { PRICE_STEP: 20, X_AMOUNT: 3 },
@@ -134,7 +138,17 @@ const getPosSize = (
   // return Math.log(Math.abs(parseFloat(positionAmount)) / initAmount) / Math.log(2) + 1
 }
 
-// console.log(getPosSize(375, 125, 7, [1, 3, 3, 1.6, 1.6, 2]))
+// const grid = [
+//   { PRICE_STEP: 20, X_AMOUNT: 1 },
+//   { PRICE_STEP: 20, X_AMOUNT: 3 },
+//   { PRICE_STEP: 50, X_AMOUNT: 3 },
+//   { PRICE_STEP: 60, X_AMOUNT: 1.6 },
+//   { PRICE_STEP: 80, X_AMOUNT: 1.6 },
+//   { PRICE_STEP: 120, X_AMOUNT: 2 },
+// ]
+// console.log(getPosSize(0.008, 0.002, 7, grid))
+// console.log(getPosSize(0.018, 0.002, 7, grid))
+// console.log(getPosSize(0.028, 0.002, 7, grid))
 
 const getOrdersAmount = (orders, key = 'origQty') =>
   _.reduce(orders, (acc, order) => acc + parseFloat(order[key]), 0)
@@ -166,12 +180,12 @@ const getTpOrders = ({
 }
 
 // console.log(getTpOrders({
-//   amount: 0.02,
+//   amount: 0.029,
 //   minAmount: 0.001,
 //   minPrice: 11327.48,
 //   maxPrice: 11385.73,
-//   sideSign: 1,
-//   maxOrders: 8,
+//   sideSign: -1,
+//   maxOrders: 6,
 //   pricePrecision: 2,
 //   quantityPrecision: 3,
 // }))

@@ -55,6 +55,17 @@ const grids = {
   ],
 }
 
+const tpGrids = {
+  default: [
+    { MIN_PERCENT: 0.25, MAX_PERCENT: 0.6, MAX_COUNT: 6 },
+    { MIN_PERCENT: 0.2, MAX_PERCENT: 0.6, MAX_COUNT: 6 },
+    { MIN_PERCENT: 0.18, MAX_PERCENT: 0.6, MAX_COUNT: 5 },
+    { MIN_PERCENT: 0.14, MAX_PERCENT: 0.5, MAX_COUNT: 4 },
+    { MIN_PERCENT: 0.11, MAX_PERCENT: 0.4, MAX_COUNT: 3 },
+    { MIN_PERCENT: 0.1, MAX_PERCENT: 0.3, MAX_COUNT: 3 },
+  ]
+}
+
 const Settings = () => {
   const store = new Store()
   const config = store.get()
@@ -276,57 +287,79 @@ const Settings = () => {
                       </Form.List>
 
                       <p>
-                        <strong>Take Profit:</strong>
+                        <strong>Take Profit grid:</strong>
                         <br />
-                        Percentage range for take profit orders
+                        Percentage range for take profit orders based on position size
                       </p>
 
-                      <Space size="small" align="center">
-                        <Form.Item
-                          {...field}
-                          label="From %"
-                          name={[field.name, 'TP_MIN_PERCENT']}
-                          fieldKey={[field.fieldKey, 'TP_MIN_PERCENT']}
-                          rules={[
-                            {
-                              required: true,
-                              message: 'Please enter your take profit % value',
-                            },
-                          ]}
-                        >
-                          <Input />
-                        </Form.Item>
+                      <Radio.Group
+                        options={Object.keys(tpGrids).map((item) => ({ label: item, value: item }))}
+                        optionType="button"
+                        buttonStyle="solid"
+                        onChange={(e) => {
+                          const { POSITIONS } = form.getFieldsValue()
+                          POSITIONS[field.name].TP_GRID = tpGrids[e.target.value]
+                          form.setFieldsValue({ POSITIONS })
+                        }}
+                      />
 
-                        <Form.Item
-                          {...field}
-                          label="To %"
-                          name={[field.name, 'TP_MAX_PERCENT']}
-                          fieldKey={[field.fieldKey, 'TP_MAX_PERCENT']}
-                          rules={[
-                            {
-                              required: true,
-                              message: 'Please enter your take profit % value',
-                            },
-                          ]}
-                        >
-                          <Input />
-                        </Form.Item>
-                      </Space>
+                      <Form.List name={[field.name, 'TP_GRID']}>
+                        {(gridFields, { add, remove }) => {
+                          return (
+                            <div>
+                              {gridFields.map((gridField) => (
+                                <Space key={gridField.key} size="small" align="center">
+                                  <Form.Item
+                                    {...gridField}
+                                    label="From %"
+                                    name={[gridField.name, 'MIN_PERCENT']}
+                                    fieldKey={[gridField.fieldKey, 'MIN_PERCENT']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="0.15" />
+                                  </Form.Item>
+                                  <Form.Item
+                                    {...gridField}
+                                    label="To %"
+                                    name={[gridField.name, 'MAX_PERCENT']}
+                                    fieldKey={[gridField.fieldKey, 'MAX_PERCENT']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="0.6" />
+                                  </Form.Item>
+                                  <Form.Item
+                                    {...gridField}
+                                    label="Orders (maximum)"
+                                    name={[gridField.name, 'MAX_COUNT']}
+                                    fieldKey={[gridField.fieldKey, 'MAX_COUNT']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="6" />
+                                  </Form.Item>
 
-                      <Form.Item
-                        {...field}
-                        label="Take Profit orders (maximum)"
-                        name={[field.name, 'TP_MAX_COUNT']}
-                        fieldKey={[field.fieldKey, 'TP_MAX_COUNT']}
-                        rules={[
-                          {
-                            required: true,
-                            message: 'Please enter max number of take profit orders',
-                          },
-                        ]}
-                      >
-                        <Input />
-                      </Form.Item>
+                                  <MinusCircleOutlined
+                                    onClick={() => {
+                                      remove(gridField.name)
+                                    }}
+                                  />
+                                </Space>
+                              ))}
+
+                              <Form.Item>
+                                <Button
+                                  type="dashed"
+                                  onClick={() => {
+                                    add()
+                                  }}
+                                  block
+                                >
+                                  <PlusOutlined /> Add take profit grid row
+                                </Button>
+                              </Form.Item>
+                            </div>
+                          )
+                        }}
+                      </Form.List>
 
                       <p>
                         <strong>Stop Without Loss:</strong>
