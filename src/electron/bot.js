@@ -124,6 +124,12 @@ const start = async (index, contents) => {
     const p = state.position
     const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
     // console.log(p)
+
+    // const posSize = Math.log(Math.abs(parseFloat(p.positionAmt)) / AMOUNT) / Math.log(2) + 1
+    const posSize = getPosSize(Math.abs(parseFloat(p.positionAmt)), config.AMOUNT, config.GRID.length + 1, config.GRID)
+
+    const spGridIndex = Math.min(Math.max(1, Math.round(posSize)), config.SP_GRID.length - 1) - 1
+
     contents.send('onPositionUpdate', { index, state })
     const plPerc = getPLPerc(p.entryPrice, p.markPrice, SIDE_SIGN)
     if (!state.lOrders.length) {
@@ -164,7 +170,7 @@ const start = async (index, contents) => {
         state.tpOrders = orders
       })()
     }
-    if (!state.spOrder && plPerc > config.SP_PERCENT) {
+    if (!state.spOrder && plPerc > config.SP_GRID[spGridIndex].MIN_PERCENT) {
       await (async () => {
         console.log('getting sp order')
         const allOpenOrders = await binance.futures
@@ -207,15 +213,13 @@ const start = async (index, contents) => {
       })()
     }
 
-    const diff = plPerc - config.SP_PERCENT_TRIGGER
+    const diff = plPerc - config.SP_GRID[spGridIndex].TRIGGER_PERCENT
     const plus = diff > 0 ? diff : 0
     const spPrice = precision(
-      getPLPrice(parseFloat(p.entryPrice), config.SP_PERCENT + plus, SIDE_SIGN),
+      getPLPrice(parseFloat(p.entryPrice), config.SP_GRID[spGridIndex].MIN_PERCENT + plus, SIDE_SIGN),
       state.pricePrecision,
     )
 
-    // const posSize = Math.log(Math.abs(parseFloat(p.positionAmt)) / AMOUNT) / Math.log(2) + 1
-    const posSize = getPosSize(Math.abs(parseFloat(p.positionAmt)), config.AMOUNT, config.GRID.length + 1, config.GRID)
     // make tp closer to base price to minimize risks after 3rd order
     // const numOfRiskOrders = 3
     // const tpDistanceCoefficient =
@@ -315,7 +319,7 @@ const start = async (index, contents) => {
 
     if (
       state.spOrder &&
-      plPerc > config.SP_PERCENT &&
+      plPerc > config.SP_GRID[spGridIndex].MIN_PERCENT &&
       (parseFloat(state.spOrder.origQty) !== Math.abs(parseFloat(p.positionAmt)) ||
         parseFloat(state.spOrder.stopPrice) !== spPrice)
     ) {
