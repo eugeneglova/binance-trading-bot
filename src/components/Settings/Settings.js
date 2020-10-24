@@ -66,6 +66,17 @@ const tpGrids = {
   ]
 }
 
+const spGrids = {
+  default: [
+    { TRIGGER_PERCENT: 0.25, MIN_PERCENT: 0.2 },
+    { TRIGGER_PERCENT: 0.2, MIN_PERCENT: 0.15 },
+    { TRIGGER_PERCENT: 0.2, MIN_PERCENT: 0.13 },
+    { TRIGGER_PERCENT: 0.2, MIN_PERCENT: 0.12 },
+    { TRIGGER_PERCENT: 0.13, MIN_PERCENT: 0.1 },
+    { TRIGGER_PERCENT: 0.12, MIN_PERCENT: 0.1 },
+  ]
+}
+
 const Settings = () => {
   const store = new Store()
   const config = store.get()
@@ -362,42 +373,70 @@ const Settings = () => {
                       </Form.List>
 
                       <p>
-                        <strong>Stop Without Loss:</strong>
+                        <strong>Stop Without Loss grid:</strong>
                         <br />
                         Percentage when to add trailing stop loss and minumum when close position
                       </p>
 
-                      <Space size="small" align="center">
-                        <Form.Item
-                          {...field}
-                          label="Trigger %"
-                          name={[field.name, 'SP_PERCENT_TRIGGER']}
-                          fieldKey={[field.fieldKey, 'SP_PERCENT_TRIGGER']}
-                          rules={[
-                            {
-                              required: true,
-                              message: 'Please enter your stop profit % trigger value',
-                            },
-                          ]}
-                        >
-                          <Input />
-                        </Form.Item>
+                      <Radio.Group
+                        options={Object.keys(tpGrids).map((item) => ({ label: item, value: item }))}
+                        optionType="button"
+                        buttonStyle="solid"
+                        onChange={(e) => {
+                          const { POSITIONS } = form.getFieldsValue()
+                          POSITIONS[field.name].SP_GRID = spGrids[e.target.value]
+                          form.setFieldsValue({ POSITIONS })
+                        }}
+                      />
 
-                        <Form.Item
-                          {...field}
-                          label="Minimum %"
-                          name={[field.name, 'SP_PERCENT']}
-                          fieldKey={[field.fieldKey, 'SP_PERCENT']}
-                          rules={[
-                            {
-                              required: true,
-                              message: 'Please enter your stop profit % value',
-                            },
-                          ]}
-                        >
-                          <Input />
-                        </Form.Item>
-                      </Space>
+                      <Form.List name={[field.name, 'SP_GRID']}>
+                        {(gridFields, { add, remove }) => {
+                          return (
+                            <div>
+                              {gridFields.map((gridField) => (
+                                <Space key={gridField.key} size="small" align="center">
+                                  <Form.Item
+                                    {...gridField}
+                                    label="Trigger %"
+                                    name={[gridField.name, 'TRIGGER_PERCENT']}
+                                    fieldKey={[gridField.fieldKey, 'TRIGGER_PERCENT']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="0.2" />
+                                  </Form.Item>
+                                  <Form.Item
+                                    {...gridField}
+                                    label="Minimum %"
+                                    name={[gridField.name, 'MIN_PERCENT']}
+                                    fieldKey={[gridField.fieldKey, 'MIN_PERCENT']}
+                                    rules={[{ required: true, message: 'Missing value' }]}
+                                  >
+                                    <Input placeholder="0.6" />
+                                  </Form.Item>
+
+                                  <MinusCircleOutlined
+                                    onClick={() => {
+                                      remove(gridField.name)
+                                    }}
+                                  />
+                                </Space>
+                              ))}
+
+                              <Form.Item>
+                                <Button
+                                  type="dashed"
+                                  onClick={() => {
+                                    add()
+                                  }}
+                                  block
+                                >
+                                  <PlusOutlined /> Add stop profit grid row
+                                </Button>
+                              </Form.Item>
+                            </div>
+                          )
+                        }}
+                      </Form.List>
 
                       <Form.Item
                         {...field}
