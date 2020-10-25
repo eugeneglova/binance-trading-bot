@@ -10,6 +10,7 @@
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "antd": "^4.7.0",
+    "bollinger-bands": "^3.0.1",
     "config-uncached": "^1.0.2",
     "electron-is-dev": "^1.2.0",
     "electron-log": "^4.2.4",

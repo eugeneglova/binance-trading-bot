@@ -181,6 +181,8 @@ const Settings = () => {
                           options={[
                             { label: 'Price Distance', value: 'distance' },
                             { label: 'Price', value: 'price' },
+                            { label: 'BB 15m', value: 'bb' },
+                            { label: 'BB 15m middle', value: 'bb-mid' },
                           ]}
                           optionType="button"
                           buttonStyle="solid"
