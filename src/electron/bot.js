@@ -230,7 +230,7 @@ const start = async (index, contents) => {
     const diff = plPerc - config.SP_GRID[spGridIndex].TRIGGER_PERCENT
     const plus = diff > 0 ? diff : 0
     const spPrice = precision(
-      getPLPrice(parseFloat(p.entryPrice), config.SP_GRID[spGridIndex].MIN_PERCENT + plus, SIDE_SIGN),
+      getPLPrice(parseFloat(p.entryPrice), parseFloat(config.SP_GRID[spGridIndex].MIN_PERCENT) + plus, SIDE_SIGN),
       state.pricePrecision,
     )
 
