@@ -77,6 +77,10 @@ const start = async (index, contents) => {
     }
 
     console.log({ price, topBookPrice })
+    if (!price) {
+      console.error('PRICE_TYPE error')
+      return
+    }
     const amount = SIDE_SIGN * config.AMOUNT
     const orders = getOrders({
       price,
