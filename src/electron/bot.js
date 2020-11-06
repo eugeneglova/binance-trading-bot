@@ -1,4 +1,5 @@
 const Binance = require('node-binance-api-ext')
+const boll = require('bollinger-bands')
 const Store = require('electron-store')
 const _ = require('lodash')
 const moment = require('moment')
@@ -57,11 +58,24 @@ const start = async (index, contents) => {
       .quote(config.SYMBOL)
       .catch((e) => console.error(new Error().stack) || console.error(e))
     const topBookPrice = parseFloat(SIDE_SIGN > 0 ? quote.bidPrice : quote.askPrice)
-    const price = config.PRICE_TYPE === 'distance'
-      ? getNextPrice(topBookPrice, 0, SIDE_SIGN, [
+
+    let price
+    if (config.PRICE_TYPE === 'distance') {
+      price = getNextPrice(topBookPrice, 0, SIDE_SIGN, [
         { PRICE_STEP: config.PRICE_DISTANCE },
       ])
-      : SIDE_SIGN > 0 ? Math.min(config.PRICE, topBookPrice) : Math.max(config.PRICE, topBookPrice)
+    } else if (config.PRICE_TYPE === 'price') {
+      price = SIDE_SIGN > 0 ? Math.min(config.PRICE, topBookPrice) : Math.max(config.PRICE, topBookPrice)
+    } else if (config.PRICE_TYPE === 'bb' || config.PRICE_TYPE === 'bb-mid') {
+      const candlesticks = await binance.futures.candlesticks(config.SYMBOL, '15m', { limit: 20 })
+      const closeCandles = candlesticks.map((item) => parseFloat(item[4]))
+      const bollClose = boll(closeCandles)
+      const bbPrice = config.PRICE_TYPE === 'bb-mid'
+        ? _.last(bollClose.mid)
+        : _.last(SIDE_SIGN > 0 ? bollClose.lower : bollClose.upper)
+      price = SIDE_SIGN > 0 ? Math.min(bbPrice, topBookPrice) : Math.max(bbPrice, topBookPrice)
+    }
+
     console.log({ price, topBookPrice })
     const amount = SIDE_SIGN * config.AMOUNT
     const orders = getOrders({
@@ -216,7 +230,7 @@ const start = async (index, contents) => {
     const diff = plPerc - config.SP_GRID[spGridIndex].TRIGGER_PERCENT
     const plus = diff > 0 ? diff : 0
     const spPrice = precision(
-      getPLPrice(parseFloat(p.entryPrice), config.SP_GRID[spGridIndex].MIN_PERCENT + plus, SIDE_SIGN),
+      getPLPrice(parseFloat(p.entryPrice), parseFloat(config.SP_GRID[spGridIndex].MIN_PERCENT) + plus, SIDE_SIGN),
       state.pricePrecision,
     )
 
