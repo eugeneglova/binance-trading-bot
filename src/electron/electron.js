@@ -4,8 +4,10 @@ const Store = require('electron-store')
 
 Object.assign(console, log.functions)
 
-const start = require('./bot')
+const bot = require('./bot')
 const test = require('./test')
+
+const { start, connect } = bot
 
 const store = new Store({
   defaults: {
@@ -128,6 +130,23 @@ app.on('activate', () => {
 
 // communication
 const { ipcMain } = electron
+
+let disconnectWSFunction
+let isWSConnected = false
+ipcMain.on('connect', async (event) => {
+  isWSConnected = true
+  event.reply('onChangeIsWSConnected', JSON.stringify(isWSConnected))
+  disconnectWSFunction = await connect(mainWindow.webContents)
+})
+ipcMain.on('disconnect', (event) => {
+  disconnectWSFunction && disconnectWSFunction()
+  isWSConnected = false
+  event.reply('onChangeIsWSConnected', JSON.stringify(isWSConnected))
+})
+
+ipcMain.on('getIsWSConnected', (event) => {
+  event.returnValue = JSON.stringify(isWSConnected)
+})
 
 const stopFunctions = []
 const isRunning = []

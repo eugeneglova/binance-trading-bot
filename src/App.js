@@ -11,11 +11,14 @@ const { Header, Content, Footer } = Layout
 
 function App() {
   const [isRunning, setIsRunning] = useState()
+  const [isWSConnected, setIsWSConnected] = useState()
   const [page, setPage] = useState('trading')
 
   useEffect(() => {
     setIsRunning(JSON.parse(ipcRenderer.sendSync('getIsRunning')))
+    setIsWSConnected(JSON.parse(ipcRenderer.sendSync('getIsWSConnected')))
     ipcRenderer.on('onChangeIsRunning', (event, value) => setIsRunning(JSON.parse(value)))
+    ipcRenderer.on('onChangeIsWSConnected', (event, value) => setIsWSConnected(JSON.parse(value)))
   }, [])
 
   return (
@@ -58,6 +61,13 @@ function App() {
               }}
               onStop={(index) => {
                 ipcRenderer.send('stop', index)
+              }}
+              isWSConnected={isWSConnected}
+              onConnect={() => {
+                ipcRenderer.send('connect')
+              }}
+              onDisconnect={() => {
+                ipcRenderer.send('disconnect')
               }}
             />
           )}

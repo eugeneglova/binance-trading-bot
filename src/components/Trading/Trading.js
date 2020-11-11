@@ -22,7 +22,7 @@ const precision = (value, decimals = getDecimals(value)) =>
 
 const getPLPerc = (basePrice, price, sideSign) => ((price / basePrice - 1) / sideSign) * 100
 
-const Trading = ({ isRunning = [], onStart, onStop }) => {
+const Trading = ({ isRunning = [], onStart, onStop, onConnect, onDisconnect, isWSConnected }) => {
   const store = new Store()
   const config = store.get()
 
@@ -98,6 +98,37 @@ const Trading = ({ isRunning = [], onStart, onStop }) => {
   return (
     <div>
       <div>
+        <div>
+          <Button
+            type="primary"
+            onClick={() => {
+              onConnect()
+            }}
+            disabled={isWSConnected}
+          >
+            Connect
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => {
+              onDisconnect()
+            }}
+            disabled={!isWSConnected}
+          >
+            Disconnect
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => {
+              onDisconnect()
+              onConnect()
+            }}
+            disabled={!isWSConnected}
+          >
+            Reconnect
+          </Button>
+        </div>
+
         {config.POSITIONS.map((pos, index) => (
           <div>
             <Space>

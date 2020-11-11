@@ -1,3 +1,4 @@
+const events = require('events')
 const Binance = require('node-binance-api-ext')
 const boll = require('bollinger-bands')
 const Store = require('electron-store')
@@ -14,6 +15,8 @@ const {
   getNextPrice,
   getPosSize,
 } = require('./functions')
+
+const em = new events.EventEmitter()
 
 const start = async (index, contents) => {
   const store = new Store()
@@ -254,7 +257,8 @@ const start = async (index, contents) => {
       : Infinity
     // when pos size less than closest limit order we need update orders
     console.log(config.SYMBOL, config.SIDE, { amt: p.positionAmt, minLOrderSize , posSize, c1: minLOrderSize - posSize })
-    if ((minLOrderSize - posSize >= 1.1 && posSize >= 1) || (minLOrderSize - posSize < 1 && posSize < 1)) {
+    // if ((minLOrderSize - posSize >= 1.1 && posSize >= 1) || (minLOrderSize - posSize < 1 && posSize < 1)) {
+    if (minLOrderSize - posSize >= 1.1 && posSize >= 1) {
       await Promise.allSettled(
         state.lOrders.map(({ orderId }) =>
           binance.futures
@@ -434,46 +438,12 @@ const start = async (index, contents) => {
       onPositionClose()
     }
   }
+  em.on('accountUpdate', accountUpdate)
 
   const orderTradeUpdate = async (data) => {
     console.log(config.SYMBOL, config.SIDE, 'order trade update')
   }
-
-  const userFuturesDataHandler = (data) => {
-    const type = data.e
-    if (type === 'listenKeyExpired') {
-      console.log(config.SYMBOL, config.SIDE, 'listenKeyExpired reconnect')
-      connect()
-    } else if (type === 'ACCOUNT_UPDATE') {
-      accountUpdate(data)
-    } else if (type === 'ORDER_TRADE_UPDATE') {
-      orderTradeUpdate(data)
-    } else if (type === 'MARGIN_CALL') {
-    } else {
-      console.error('Unexpected userFuturesData: ' + type)
-    }
-  }
-
-  const getDataStream = async () => {
-    console.log(config.SYMBOL, config.SIDE, 'get data stream')
-    const dataStream = await binance.futures
-      .getDataStream()
-      .catch((e) => console.error(new Error().stack) || console.error(e))
-    console.log(config.SYMBOL, config.SIDE, 'listenKey', dataStream.listenKey)
-    return dataStream
-  }
-
-  const keepAliveIntervalId = setInterval(() => {
-    console.log(config.SYMBOL, config.SIDE, 'keep alive')
-    getDataStream()
-  }, 59 * 60 * 1000)
-
-  const connect = async function reconnect() {
-    console.log(config.SYMBOL, config.SIDE, 'connect')
-    const { listenKey } = await getDataStream()
-    binance.webSocket.futuresSubscribeSingle(listenKey, userFuturesDataHandler, reconnect)
-  }
-  connect()
+  em.on('orderTradeUpdate', _.debounce(orderTradeUpdate, 1000))
 
   const checkPositions = async () => {
     await binance.useServerTime()
@@ -533,15 +503,70 @@ const start = async (index, contents) => {
     state.lOrders = []
     state.tpOrders = []
     state.slOrder = null
-    clearInterval(keepAliveIntervalId)
     clearInterval(checkPositionsIntervalId)
     clearInterval(createOrdersIntervalId)
-    console.log(config.SYMBOL, config.SIDE, 'disconnect')
-    const { listenKey } = await getDataStream()
-    binance.webSocket.futuresTerminate(listenKey)
   }
 
   return stop
 }
 
-module.exports = start
+const connect = (contents) => {
+  const store = new Store()
+
+  const binance = Binance({
+    APIKEY: store.get().APIKEY,
+    APISECRET: store.get().APISECRET,
+  })
+
+  const userFuturesDataHandler = (data) => {
+    const type = data.e
+    if (type === 'listenKeyExpired') {
+      console.log('listenKeyExpired reconnect')
+      reconnect()
+    } else if (type === 'ACCOUNT_UPDATE') {
+      em.emit('accountUpdate', data)
+      // accountUpdate(data)
+    } else if (type === 'ORDER_TRADE_UPDATE') {
+      // orderTradeUpdate(data)
+      em.emit('orderTradeUpdate', data)
+    } else if (type === 'MARGIN_CALL') {
+    } else {
+      console.error('Unexpected userFuturesData: ' + type)
+    }
+  }
+
+  const getDataStream = async () => {
+    console.log('get data stream')
+    const dataStream = await binance.futures
+      .getDataStream()
+      .catch((e) => console.error(new Error().stack) || console.error(e))
+    console.log('listenKey', dataStream.listenKey)
+    return dataStream
+  }
+
+  const keepAliveIntervalId = setInterval(() => {
+    console.log('keep alive')
+    getDataStream()
+  }, 59 * 60 * 1000)
+
+  const wsconnect = async function reconnect() {
+    console.log('connect')
+    const { listenKey } = await getDataStream()
+    binance.webSocket.futuresSubscribeSingle(listenKey, userFuturesDataHandler, reconnect)
+  }
+  wsconnect()
+
+  const disconnect = async () => {
+    clearInterval(keepAliveIntervalId)
+    console.log('disconnect')
+    const { listenKey } = await getDataStream()
+    binance.webSocket.futuresTerminate(listenKey)
+  }
+
+  return disconnect
+}
+
+module.exports = {
+  start,
+  connect,
+}
