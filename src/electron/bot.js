@@ -42,7 +42,7 @@ const start = async (index, contents) => {
       orders.map(({ orderId }) =>
         binance.futures
           .cancel(config.SYMBOL, { orderId })
-          .catch((e) => console.error(new Error().stack) || console.error(e)),
+          .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e)),
       ),
     )
   }
@@ -50,7 +50,7 @@ const start = async (index, contents) => {
   const cancelOpenOrders = async () => {
     const allOpenOrders = await binance.futures
       .openOrders(config.SYMBOL)
-      .catch((e) => console.error(new Error().stack) || console.error(e))
+      .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
     const orders = _.filter(allOpenOrders, (o) => config.SIDE === 'AUTO' ? true : o.positionSide === config.SIDE)
     return cancelOrders(orders)
   }
@@ -61,7 +61,7 @@ const start = async (index, contents) => {
     const SIDE_SIGN = positionSide === 'SHORT' ? -1 : 1
     const quote = await binance.futures
       .quote(config.SYMBOL)
-      .catch((e) => console.error(new Error().stack) || console.error(e))
+      .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
     const topBookPrice = parseFloat(SIDE_SIGN > 0 ? quote.bidPrice : quote.askPrice)
 
     let price
@@ -83,7 +83,7 @@ const start = async (index, contents) => {
 
     console.log(config.SYMBOL, config.SIDE, { price, topBookPrice })
     if (!price) {
-      console.error('PRICE_TYPE error')
+      console.error(config.SYMBOL, config.SIDE, 'PRICE_TYPE error')
       return
     }
     const amount = SIDE_SIGN * config.AMOUNT
@@ -103,7 +103,7 @@ const start = async (index, contents) => {
         binance.futures[SIDE_SIGN > 0 ? 'buy' : 'sell'](config.SYMBOL, Math.abs(o.amount), o.price, {
           positionSide,
           postOnly: true,
-        }).catch((e) => console.error(new Error().stack) || console.error(e)),
+        }).catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e)),
       ),
     )
     state.createOrders = false
@@ -135,7 +135,7 @@ const start = async (index, contents) => {
       _.map(orders, (o) =>
         binance.futures[SIDE_SIGN < 0 ? 'buy' : 'sell'](config.SYMBOL, Math.abs(o.amount), o.price, {
           positionSide: p.positionSide,
-        }).catch((e) => console.error(new Error().stack) || console.error(e)),
+        }).catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e)),
       ),
     )
     state.createTpOrders = false
@@ -164,7 +164,7 @@ const start = async (index, contents) => {
         console.log(config.SYMBOL, config.SIDE, 'getting limit orders')
         const allOpenOrders = await binance.futures
           .openOrders(config.SYMBOL)
-          .catch((e) => console.error(new Error().stack) || console.error(e))
+          .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
         const lSide = SIDE_SIGN > 0 ? 'BUY' : 'SELL'
         const orders = _.filter(
           allOpenOrders,
@@ -183,7 +183,7 @@ const start = async (index, contents) => {
         console.log(config.SYMBOL, config.SIDE, 'getting tp orders')
         const allOpenOrders = await binance.futures
           .openOrders(config.SYMBOL)
-          .catch((e) => console.error(new Error().stack) || console.error(e))
+          .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
         const tpSide = SIDE_SIGN < 0 ? 'BUY' : 'SELL'
         const orders = _.filter(
           allOpenOrders,
@@ -202,7 +202,7 @@ const start = async (index, contents) => {
         console.log(config.SYMBOL, config.SIDE, 'getting sp order')
         const allOpenOrders = await binance.futures
           .openOrders(config.SYMBOL)
-          .catch((e) => console.error(new Error().stack) || console.error(e))
+          .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
         const spSide = SIDE_SIGN < 0 ? 'BUY' : 'SELL'
         const order = _.find(
           allOpenOrders,
@@ -222,7 +222,7 @@ const start = async (index, contents) => {
         console.log(config.SYMBOL, config.SIDE, 'getting sl order')
         const allOpenOrders = await binance.futures
           .openOrders(config.SYMBOL)
-          .catch((e) => console.error(new Error().stack) || console.error(e))
+          .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
         const slSide = SIDE_SIGN < 0 ? 'BUY' : 'SELL'
         const orders = _.filter(
           allOpenOrders,
@@ -269,7 +269,7 @@ const start = async (index, contents) => {
         state.lOrders.map(({ orderId }) =>
           binance.futures
             .cancel(config.SYMBOL, { orderId })
-            .catch((e) => console.error(new Error().stack) || console.error(e)),
+            .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e)),
         ),
       ).then(async () => {
         console.log(config.SYMBOL, config.SIDE, 'cancelled limit orders', {
@@ -299,7 +299,7 @@ const start = async (index, contents) => {
                 positionSide: p.positionSide,
                 postOnly: true,
               },
-            ).catch((e) => console.error(new Error().stack) || console.error(e)),
+            ).catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e)),
           ),
         )
         state.lOrders = []
@@ -315,7 +315,7 @@ const start = async (index, contents) => {
         state.tpOrders.map(({ orderId }) =>
           binance.futures
             .cancel(config.SYMBOL, { orderId })
-            .catch((e) => console.error(new Error().stack) || console.error(e)),
+            .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e)),
         ),
       )
       console.log(config.SYMBOL, config.SIDE, 'create orders because', {
@@ -350,7 +350,7 @@ const start = async (index, contents) => {
         {
           positionSide: p.positionSide,
         },
-      ).catch((e) => console.error(new Error().stack) || console.error(e))
+      ).catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
     }
 
     if (
@@ -387,7 +387,7 @@ const start = async (index, contents) => {
         {
           positionSide: p.positionSide,
         },
-      ).catch((e) => console.error(new Error().stack) || console.error(e))
+      ).catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
     } else if (
       state.slOrder &&
       (parseFloat(state.slOrder.stopPrice) !== slPrice ||
@@ -402,7 +402,7 @@ const start = async (index, contents) => {
       console.log(config.SYMBOL, config.SIDE, 'update sl order', amount, slPrice)
       await binance.futures
         .cancel(config.SYMBOL, { orderId: state.slOrder.orderId })
-        .catch((e) => console.error(new Error().stack) || console.error(e))
+        .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
       binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
         config.SYMBOL,
         Math.abs(amount),
@@ -410,7 +410,7 @@ const start = async (index, contents) => {
         {
           positionSide: p.positionSide,
         },
-      ).catch((e) => console.error(new Error().stack) || console.error(e))
+      ).catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
       state.slOrder = null
       state.lOrders = []
     }
@@ -434,7 +434,7 @@ const start = async (index, contents) => {
 
     const positions = await binance.futures
       .positionRisk()
-      .catch((e) => console.error(new Error().stack) || console.error(e))
+      .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
     if (!positions) {
       console.error('ERROR: accountUpdate positionRisk problem')
       return
@@ -467,7 +467,7 @@ const start = async (index, contents) => {
     await binance.useServerTime()
     const positions = await binance.futures
       .positionRisk()
-      .catch((e) => console.error(new Error().stack) || console.error(e))
+      .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
     const p = _.find(positions, { symbol: config.SYMBOL, positionSide: config.SIDE })
     // console.log(config.SYMBOL, config.SIDE, p)
     if (p && parseFloat(p.positionAmt) !== 0) {
@@ -484,7 +484,7 @@ const start = async (index, contents) => {
   state.quantityPrecision = quantityPrecision
   const positions = await binance.futures
     .positionRisk()
-    .catch((e) => console.error(new Error().stack) || console.error(e))
+    .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
   const p = _.find(positions, ({ symbol, positionSide, positionAmt }) => (
     symbol === config.SYMBOL && (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) && parseFloat(positionAmt) !== 0
   ))
@@ -599,7 +599,7 @@ const cancelOrders = async (index) => {
       orders.map(({ orderId }) =>
         binance.futures
           .cancel(config.SYMBOL, { orderId })
-          .catch((e) => console.error(new Error().stack) || console.error(e)),
+          .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e)),
       ),
     )
   }
@@ -607,7 +607,7 @@ const cancelOrders = async (index) => {
   const cancelOpenOrders = async () => {
     const allOpenOrders = await binance.futures
       .openOrders(config.SYMBOL)
-      .catch((e) => console.error(new Error().stack) || console.error(e))
+      .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
     const orders = _.filter(allOpenOrders, (o) => config.SIDE === 'AUTO' ? true : o.positionSide === config.SIDE)
     return cancelOrders(orders)
   }
