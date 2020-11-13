@@ -7,7 +7,7 @@ Object.assign(console, log.functions)
 const bot = require('./bot')
 const test = require('./test')
 
-const { start, connect } = bot
+const { start, connect, cancelOrders } = bot
 
 const store = new Store({
   defaults: {
@@ -163,6 +163,10 @@ ipcMain.on('stop', (event, index) => {
 
 ipcMain.on('getIsRunning', (event) => {
   event.returnValue = JSON.stringify(isRunning)
+})
+
+ipcMain.on('cancelOrders', (event, index) => {
+  cancelOrders(index, mainWindow.webContents)
 })
 
 ipcMain.on('test', async (event) => {

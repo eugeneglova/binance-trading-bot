@@ -22,7 +22,7 @@ const precision = (value, decimals = getDecimals(value)) =>
 
 const getPLPerc = (basePrice, price, sideSign) => ((price / basePrice - 1) / sideSign) * 100
 
-const Trading = ({ isRunning = [], onStart, onStop, onConnect, onDisconnect, isWSConnected }) => {
+const Trading = ({ isRunning = [], onStart, onStop, onConnect, onDisconnect, isWSConnected, onCancelOrders }) => {
   const store = new Store()
   const config = store.get()
 
@@ -162,9 +162,17 @@ const Trading = ({ isRunning = [], onStart, onStop, onConnect, onDisconnect, isW
               >
                 Restart
               </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  onCancelOrders(index)
+                }}
+              >
+                Cancel Orders
+              </Button>
             </Space>
 
-            {isRunning[index] && (
+            {false && isRunning[index] && (
               <div>
                 {botState[index] && botState[index].position && (
                   <div>

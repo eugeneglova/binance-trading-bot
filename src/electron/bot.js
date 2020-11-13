@@ -56,6 +56,8 @@ const start = async (index, contents) => {
   }
 
   const createOrders = async (positionSide) => {
+    if (state.createOrders) return
+    state.createOrders = true
     const SIDE_SIGN = positionSide === 'SHORT' ? -1 : 1
     const quote = await binance.futures
       .quote(config.SYMBOL)
@@ -104,9 +106,12 @@ const start = async (index, contents) => {
         }).catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     )
+    state.createOrders = false
   }
 
   const createTpOrders = async () => {
+    if (state.createTpOrders) return
+    state.createTpOrders = true
     const p = state.position
     const posSize = getPosSize(Math.abs(parseFloat(p.positionAmt)), config.AMOUNT, config.GRID.length + 1, config.GRID)
     const gridIndex = Math.min(Math.max(1, Math.round(posSize)), config.TP_GRID.length - 1) - 1
@@ -133,6 +138,7 @@ const start = async (index, contents) => {
         }).catch((e) => console.error(new Error().stack) || console.error(e)),
       ),
     )
+    state.createTpOrders = false
   }
 
   const onPositionNew = () => {
@@ -256,7 +262,7 @@ const start = async (index, contents) => {
       ? getPosSize(Math.abs(minLOrder.origQty), config.AMOUNT, config.GRID.length + 1, config.GRID)
       : Infinity
     // when pos size less than closest limit order we need update orders
-    console.log(config.SYMBOL, config.SIDE, { amt: p.positionAmt, minLOrderSize , posSize, c1: minLOrderSize - posSize })
+    // console.log(config.SYMBOL, config.SIDE, { amt: p.positionAmt, minLOrderSize , posSize, c1: minLOrderSize - posSize })
     // if ((minLOrderSize - posSize >= 1.1 && posSize >= 1) || (minLOrderSize - posSize < 1 && posSize < 1)) {
     if (minLOrderSize - posSize >= 1.1 && posSize >= 1) {
       await Promise.allSettled(
@@ -266,7 +272,10 @@ const start = async (index, contents) => {
             .catch((e) => console.error(new Error().stack) || console.error(e)),
         ),
       ).then(async () => {
-        console.log(config.SYMBOL, config.SIDE, 'cancelled limit orders')
+        console.log(config.SYMBOL, config.SIDE, 'cancelled limit orders', {
+          a: minLOrderSize - posSize,
+          posSize,
+        })
         const amount = config.AMOUNT
         const orders = getOrders({
           price: p.entryPrice,
@@ -309,6 +318,11 @@ const start = async (index, contents) => {
             .catch((e) => console.error(new Error().stack) || console.error(e)),
         ),
       )
+      console.log(config.SYMBOL, config.SIDE, 'create orders because', {
+        tp: state.tpOrders,
+        a: Math.abs(precision(getOrdersAmount(state.tpOrders), state.quantityPrecision)),
+        b: Math.abs(precision(parseFloat(p.positionAmt), state.quantityPrecision)),
+      })
       await createTpOrders()
       state.tpOrders = []
       state.lOrders = []
@@ -421,6 +435,10 @@ const start = async (index, contents) => {
     const positions = await binance.futures
       .positionRisk()
       .catch((e) => console.error(new Error().stack) || console.error(e))
+    if (!positions) {
+      console.error('ERROR: accountUpdate positionRisk problem')
+      return
+    }
     const p = _.find(positions, ({ symbol, positionSide, positionAmt }) => (
       symbol === config.SYMBOL && (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) && parseFloat(positionAmt) !== 0
     ))
@@ -440,10 +458,10 @@ const start = async (index, contents) => {
   }
   em.on('accountUpdate', accountUpdate)
 
-  const orderTradeUpdate = async (data) => {
-    console.log(config.SYMBOL, config.SIDE, 'order trade update')
-  }
-  em.on('orderTradeUpdate', _.debounce(orderTradeUpdate, 1000))
+  // const orderTradeUpdate = async (data) => {
+  //   console.log(config.SYMBOL, config.SIDE, 'order trade update')
+  // }
+  // em.on('orderTradeUpdate', _.debounce(orderTradeUpdate, 1000))
 
   const checkPositions = async () => {
     await binance.useServerTime()
@@ -505,6 +523,7 @@ const start = async (index, contents) => {
     state.slOrder = null
     clearInterval(checkPositionsIntervalId)
     clearInterval(createOrdersIntervalId)
+    em.off('accountUpdate', accountUpdate)
   }
 
   return stop
@@ -566,7 +585,38 @@ const connect = (contents) => {
   return disconnect
 }
 
+const cancelOrders = async (index) => {
+  const store = new Store()
+  let config = store.get().POSITIONS[index]
+
+  const binance = Binance({
+    APIKEY: store.get().APIKEY,
+    APISECRET: store.get().APISECRET,
+  })
+
+  const cancelOrders = async (orders) => {
+    return Promise.allSettled(
+      orders.map(({ orderId }) =>
+        binance.futures
+          .cancel(config.SYMBOL, { orderId })
+          .catch((e) => console.error(new Error().stack) || console.error(e)),
+      ),
+    )
+  }
+
+  const cancelOpenOrders = async () => {
+    const allOpenOrders = await binance.futures
+      .openOrders(config.SYMBOL)
+      .catch((e) => console.error(new Error().stack) || console.error(e))
+    const orders = _.filter(allOpenOrders, (o) => config.SIDE === 'AUTO' ? true : o.positionSide === config.SIDE)
+    return cancelOrders(orders)
+  }
+
+  cancelOpenOrders()
+}
+
 module.exports = {
   start,
   connect,
+  cancelOrders,
 }

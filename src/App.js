@@ -69,6 +69,9 @@ function App() {
               onDisconnect={() => {
                 ipcRenderer.send('disconnect')
               }}
+              onCancelOrders={(index) => {
+                ipcRenderer.send('cancelOrders', index)
+              }}
             />
           )}
         </div>
