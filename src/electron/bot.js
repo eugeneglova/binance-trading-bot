@@ -429,21 +429,13 @@ const start = async (em, index, contents) => {
     state.tpOrders = []
     state.slOrder = null
     cancelOpenOrders()
-    store.set(`POSITIONS[${index}].TRADES_COUNT`, config.TRADES_COUNT + 1)
+    store.set(`POSITIONS.${index}.TRADES_COUNT`, config.TRADES_COUNT + 1)
     config = store.get().POSITIONS[index]
   }
 
-  const accountUpdate = async (data) => {
+  const accountUpdate = async (positions) => {
     console.log(config.SYMBOL, config.SIDE, 'account update')
-    if (data.a.m !== 'ORDER') return
 
-    const positions = await binance.futures
-      .positionRisk()
-      .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
-    if (!positions) {
-      console.error('ERROR: accountUpdate positionRisk problem')
-      return
-    }
     const p = _.find(positions, ({ symbol, positionSide, positionAmt }) => (
       symbol === config.SYMBOL && (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) && parseFloat(positionAmt) !== 0
     ))
@@ -468,11 +460,7 @@ const start = async (em, index, contents) => {
   // }
   // em.on('orderTradeUpdate', _.debounce(orderTradeUpdate, 1000))
 
-  const checkPositions = async () => {
-    await binance.useServerTime()
-    const positions = await binance.futures
-      .positionRisk()
-      .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
+  const checkPositions = async (positions) => {
     const p = _.find(positions, { symbol: config.SYMBOL, positionSide: config.SIDE })
     // console.log(config.SYMBOL, config.SIDE, p)
     if (p && parseFloat(p.positionAmt) !== 0) {
@@ -505,8 +493,7 @@ const start = async (em, index, contents) => {
       createOrders(config.SIDE)
     }
   }
-  const checkPositionsIntervalId = setInterval(() => checkPositions(), 15 * 1000)
-  checkPositions()
+  em.on('checkPositions', checkPositions)
 
   const createOrdersIntervalId = setInterval(async () => {
     if (state.position) return
@@ -527,9 +514,9 @@ const start = async (em, index, contents) => {
     state.tpOrders = []
     state.slOrder = null
     clearInterval(configIntervalId)
-    clearInterval(checkPositionsIntervalId)
     clearInterval(createOrdersIntervalId)
     em.off('accountUpdate', accountUpdate)
+    em.off('checkPositions', checkPositions)
   }
 
   return stop
@@ -543,14 +530,21 @@ const connect = (em) => {
     APISECRET: store.get().APISECRET,
   })
 
-  const userFuturesDataHandler = (data) => {
+  const userFuturesDataHandler = async (data) => {
     const type = data.e
     if (type === 'listenKeyExpired') {
       console.log('listenKeyExpired reconnect')
       reconnect()
     } else if (type === 'ACCOUNT_UPDATE') {
-      em.emit('accountUpdate', data)
-      // accountUpdate(data)
+      if (data.a.m !== 'ORDER') return
+      const positions = await binance.futures
+        .positionRisk()
+        .catch((e) => console.error(new Error().stack) || console.error(e))
+      if (!positions) {
+        console.error('ERROR: accountUpdate positionRisk problem')
+        return
+      }
+      em.emit('accountUpdate', positions)
     } else if (type === 'ORDER_TRADE_UPDATE') {
       // orderTradeUpdate(data)
       em.emit('orderTradeUpdate', data)
@@ -581,8 +575,25 @@ const connect = (em) => {
   }
   wsconnect()
 
+  // check positions every 15 sec
+  const checkPositions = async () => {
+    await binance.useServerTime()
+    const positions = await binance.futures
+      .positionRisk()
+      .catch((e) => console.error(new Error().stack) || console.error(e))
+    if (!positions) {
+      console.error('ERROR: check positions')
+      return
+    }
+    em.emit('checkPositions', data)
+  }
+
+  const checkPositionsIntervalId = setInterval(() => checkPositions(), 15 * 1000)
+  checkPositions()
+
   const disconnect = async () => {
     clearInterval(keepAliveIntervalId)
+    clearInterval(checkPositionsIntervalId)
     console.log('disconnect')
     const { listenKey } = await getDataStream()
     binance.webSocket.futuresTerminate(listenKey)
