@@ -206,7 +206,8 @@ const autoStart = async () => {
     isRunning[index] = true
     stopFunctions[index] = await start(em, index, mainWindow.webContents)
   })
-  if (config.TELEGRAM_AUTO_START) {
+  if (store.get('TELEGRAM_AUTO_START')) {
+    isTelegramBotStarted = true
     stopTelegramBot = startTelegramBot(em)
   }
 }

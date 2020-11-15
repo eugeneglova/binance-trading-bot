@@ -585,7 +585,7 @@ const connect = (em) => {
       console.error('ERROR: check positions')
       return
     }
-    em.emit('checkPositions', data)
+    em.emit('checkPositions', positions)
   }
 
   const checkPositionsIntervalId = setInterval(() => checkPositions(), 15 * 1000)
