@@ -22,7 +22,12 @@ const precision = (value, decimals = getDecimals(value)) =>
 
 const getPLPerc = (basePrice, price, sideSign) => ((price / basePrice - 1) / sideSign) * 100
 
-const Trading = ({ isRunning = [], onStart, onStop, onConnect, onDisconnect, isWSConnected, onCancelOrders }) => {
+const Trading = ({
+  isRunning = [], onStart, onStop,
+  onConnect, onDisconnect, isWSConnected,
+  onStartTelegramBot, onStopTelegramBot, isTelegramBotStarted,
+  onCancelOrders,
+}) => {
   const store = new Store()
   const config = store.get()
 
@@ -126,6 +131,27 @@ const Trading = ({ isRunning = [], onStart, onStop, onConnect, onDisconnect, isW
             disabled={!isWSConnected}
           >
             Reconnect
+          </Button>
+        </div>
+
+        <div>
+          <Button
+            type="primary"
+            onClick={() => {
+              onStartTelegramBot()
+            }}
+            disabled={isTelegramBotStarted}
+          >
+            Start Telegram Bot
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => {
+              onStopTelegramBot()
+            }}
+            disabled={!isTelegramBotStarted}
+          >
+            Stop Telegram Bot
           </Button>
         </div>
 

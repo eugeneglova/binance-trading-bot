@@ -19,7 +19,7 @@ const start = async (em, index, contents) => {
   const store = new Store()
   let config = store.get().POSITIONS[index]
 
-  setInterval(() => {
+  const configIntervalId = setInterval(() => {
     config = store.get().POSITIONS[index]
   }, 10 * 1000)
 
@@ -526,6 +526,7 @@ const start = async (em, index, contents) => {
     state.lOrders = []
     state.tpOrders = []
     state.slOrder = null
+    clearInterval(configIntervalId)
     clearInterval(checkPositionsIntervalId)
     clearInterval(createOrdersIntervalId)
     em.off('accountUpdate', accountUpdate)

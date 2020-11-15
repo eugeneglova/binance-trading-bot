@@ -1,5 +1,5 @@
 import React from 'react'
-import { Form, Input, Button } from 'antd'
+import { Form, Input, Checkbox, Button } from 'antd'
 import Store from 'electron-store'
 
 const layout = {
@@ -64,6 +64,14 @@ const Telegram = () => {
       </Form.Item>
 
       To get user id use <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer">@userinfobot</a>
+
+      <Form.Item
+        label="Auto start"
+        name="TELEGRAM_AUTO_START"
+        valuePropName="checked"
+      >
+        <Checkbox />
+      </Form.Item>
 
       <Form.Item {...tailLayout}>
         <Button type="primary" htmlType="submit">

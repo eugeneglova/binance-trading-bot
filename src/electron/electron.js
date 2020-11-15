@@ -153,6 +153,23 @@ ipcMain.on('getIsWSConnected', (event) => {
   event.returnValue = JSON.stringify(isWSConnected)
 })
 
+let stopTelegramBotFunction
+let isTelegramBotStarted = false
+ipcMain.on('startTelegramBot', async (event) => {
+  isTelegramBotStarted = true
+  event.reply('onChangeIsTelegramBotStarted', JSON.stringify(isTelegramBotStarted))
+  stopTelegramBotFunction = startTelegramBot(em)
+})
+ipcMain.on('stopTelegramBot', (event) => {
+  stopTelegramBotFunction && stopTelegramBotFunction()
+  isTelegramBotStarted = false
+  event.reply('onChangeIsTelegramBotStarted', JSON.stringify(isTelegramBotStarted))
+})
+
+ipcMain.on('getIsTelegramBotStarted', (event) => {
+  event.returnValue = JSON.stringify(isTelegramBotStarted)
+})
+
 const stopFunctions = []
 const isRunning = []
 ipcMain.on('start', async (event, index) => {
@@ -189,8 +206,9 @@ const autoStart = async () => {
     isRunning[index] = true
     stopFunctions[index] = await start(em, index, mainWindow.webContents)
   })
+  if (config.TELEGRAM_AUTO_START) {
+    stopTelegramBot = startTelegramBot(em)
+  }
 }
 
 app.on('ready', autoStart)
-
-startTelegramBot(em)

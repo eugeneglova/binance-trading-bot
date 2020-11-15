@@ -5,13 +5,10 @@ const start = (em) => {
   const store = new Store()
   let config = store.get()
 
-  setInterval(() => {
+  const configIntervalId = setInterval(() => {
     config = store.get()
   }, 10 * 1000)
 
-  if (!config.TELEGRAM_BOT_TOKEN) {
-    return
-  }
   const bot = new Telegraf(config.TELEGRAM_BOT_TOKEN)
 
   em.on('tg:newPosition', (data) => {
@@ -29,6 +26,13 @@ const start = (em) => {
   })
 
   bot.launch()
+
+  const stop = () => {
+    clearInterval(configIntervalId)
+    bot.stop()
+  }
+
+  return stop
 }
 
 module.exports = {

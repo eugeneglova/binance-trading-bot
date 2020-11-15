@@ -13,13 +13,16 @@ const { Header, Content, Footer } = Layout
 function App() {
   const [isRunning, setIsRunning] = useState()
   const [isWSConnected, setIsWSConnected] = useState()
+  const [isTelegramBotStarted, setIsTelegramBotStarted] = useState()
   const [page, setPage] = useState('trading')
 
   useEffect(() => {
     setIsRunning(JSON.parse(ipcRenderer.sendSync('getIsRunning')))
     setIsWSConnected(JSON.parse(ipcRenderer.sendSync('getIsWSConnected')))
+    setIsTelegramBotStarted(JSON.parse(ipcRenderer.sendSync('getIsTelegramBotStarted')))
     ipcRenderer.on('onChangeIsRunning', (event, value) => setIsRunning(JSON.parse(value)))
     ipcRenderer.on('onChangeIsWSConnected', (event, value) => setIsWSConnected(JSON.parse(value)))
+    ipcRenderer.on('onChangeIsTelegramBotStarted', (event, value) => setIsTelegramBotStarted(JSON.parse(value)))
   }, [])
 
   return (
@@ -73,6 +76,13 @@ function App() {
               }}
               onDisconnect={() => {
                 ipcRenderer.send('disconnect')
+              }}
+              isTelegramBotStarted={isTelegramBotStarted}
+              onStartTelegramBot={() => {
+                ipcRenderer.send('startTelegramBot')
+              }}
+              onStopTelegramBot={() => {
+                ipcRenderer.send('stopTelegramBot')
               }}
               onCancelOrders={(index) => {
                 ipcRenderer.send('cancelOrders', index)
