@@ -1,6 +1,6 @@
 import React from 'react'
 import moment from 'moment'
-import { Form, Input, Button, Collapse, DatePicker, Radio, Space } from 'antd'
+import { Form, Input, Checkbox, Button, Collapse, DatePicker, Radio, Space } from 'antd'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import Store from 'electron-store'
 
@@ -139,6 +139,16 @@ const Settings = () => {
                         optionType="button"
                         buttonStyle="solid"
                       />
+                    </Form.Item>
+
+                    <Form.Item
+                      {...field}
+                      label="Auto start"
+                      name={[field.name, 'AUTO_START']}
+                      fieldKey={[field.fieldKey, 'AUTO_START']}
+                      valuePropName="checked"
+                    >
+                      <Checkbox />
                     </Form.Item>
 
                     <MinusCircleOutlined

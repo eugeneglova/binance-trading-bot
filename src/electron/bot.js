@@ -1,4 +1,3 @@
-const events = require('events')
 const Binance = require('node-binance-api-ext')
 const boll = require('bollinger-bands')
 const Store = require('electron-store')
@@ -16,9 +15,7 @@ const {
   getPosSize,
 } = require('./functions')
 
-const em = new events.EventEmitter()
-
-const start = async (index, contents) => {
+const start = async (em, index, contents) => {
   const store = new Store()
   let config = store.get().POSITIONS[index]
 
@@ -143,6 +140,10 @@ const start = async (index, contents) => {
 
   const onPositionNew = () => {
     console.log(config.SYMBOL, config.SIDE, 'NEW POS')
+    em.emit('tg:newPosition', {
+      symbol: config.SYMBOL,
+      side: config.SIDE,
+    })
     createTpOrders()
   }
 
@@ -420,6 +421,10 @@ const start = async (index, contents) => {
 
   const onPositionClose = async () => {
     console.log(config.SYMBOL, config.SIDE, 'CLOSE POS')
+    em.emit('tg:closePosition', {
+      symbol: config.SYMBOL,
+      side: config.SIDE,
+    })
     state.lOrders = []
     state.tpOrders = []
     state.slOrder = null
@@ -529,7 +534,7 @@ const start = async (index, contents) => {
   return stop
 }
 
-const connect = (contents) => {
+const connect = (em) => {
   const store = new Store()
 
   const binance = Binance({

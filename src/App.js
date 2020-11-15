@@ -6,6 +6,7 @@ import Test from './components/Test'
 import ApiKeys from './components/ApiKeys'
 import Settings from './components/Settings'
 import Trading from './components/Trading'
+import Telegram from './components/Telegram'
 
 const { Header, Content, Footer } = Layout
 
@@ -35,6 +36,7 @@ function App() {
           <Menu.Item key="settings">Settings</Menu.Item>
           <Menu.Item key="apikeys">Api Keys</Menu.Item>
           <Menu.Item key="test">Test</Menu.Item>
+          <Menu.Item key="telegram">Telegram</Menu.Item>
         </Menu>
       </Header>
       <Content style={{ padding: '0 50px' }}>
@@ -44,6 +46,9 @@ function App() {
           <Breadcrumb.Item>App</Breadcrumb.Item>
         </Breadcrumb>
         <div className="site-layout-content">
+          {page === 'telegram' && (
+            <Telegram />
+          )}
           {page === 'test' && (
             <Test />
           )}

@@ -1,13 +1,18 @@
-const electron = require('electron');
+const electron = require('electron')
 const log = require('electron-log')
 const Store = require('electron-store')
+const events = require('events')
 
 Object.assign(console, log.functions)
 
 const bot = require('./bot')
 const test = require('./test')
+const tgbot = require('./tgbot')
 
 const { start, connect, cancelOrders } = bot
+const { start: startTelegramBot } = tgbot
+
+const em = new events.EventEmitter()
 
 const store = new Store({
   defaults: {
@@ -136,7 +141,7 @@ let isWSConnected = false
 ipcMain.on('connect', async (event) => {
   isWSConnected = true
   event.reply('onChangeIsWSConnected', JSON.stringify(isWSConnected))
-  disconnectWSFunction = await connect(mainWindow.webContents)
+  disconnectWSFunction = await connect(em)
 })
 ipcMain.on('disconnect', (event) => {
   disconnectWSFunction && disconnectWSFunction()
@@ -153,7 +158,7 @@ const isRunning = []
 ipcMain.on('start', async (event, index) => {
   isRunning[index] = true
   event.reply('onChangeIsRunning', JSON.stringify(isRunning))
-  stopFunctions[index] = await start(index, mainWindow.webContents)
+  stopFunctions[index] = await start(em, index, mainWindow.webContents)
 })
 ipcMain.on('stop', (event, index) => {
   stopFunctions[index] && stopFunctions[index]()
@@ -170,7 +175,22 @@ ipcMain.on('cancelOrders', (event, index) => {
 })
 
 ipcMain.on('test', async (event) => {
+  em.emit('testmessage')
   store.set(`POSITIONS[1].TRADES_COUNT`, 1)
   const data = await test()
   event.reply('test-done', data)
 })
+
+const autoStart = async () => {
+  isWSConnected = true
+  disconnectWSFunction = await connect(em)
+  store.get('POSITIONS').forEach(async (config, index) => {
+    if (!config.AUTO_START) return
+    isRunning[index] = true
+    stopFunctions[index] = await start(em, index, mainWindow.webContents)
+  })
+}
+
+app.on('ready', autoStart)
+
+startTelegramBot(em)
