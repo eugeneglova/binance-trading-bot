@@ -241,10 +241,11 @@ const start = async (em, index, contents) => {
       })()
     }
 
-    const diff = plPerc - config.SP_GRID[spGridIndex].TRIGGER_PERCENT
-    const plus = diff > 0 ? diff : 0
+    const spGridConfig = config.SP_GRID[spGridIndex] || _.last(config.SP_GRID)
+    const diff = plPerc - spGridConfig.TRIGGER_PERCENT
+    const plus = diff > 0 && spGridConfig.TRAILING ? diff : 0
     const spPrice = precision(
-      getPLPrice(parseFloat(p.entryPrice), parseFloat(config.SP_GRID[spGridIndex].MIN_PERCENT) + plus, SIDE_SIGN),
+      getPLPrice(parseFloat(p.entryPrice), parseFloat(spGridConfig.MIN_PERCENT) + plus, SIDE_SIGN),
       state.pricePrecision,
     )
 

@@ -425,6 +425,15 @@ const Settings = () => {
                                   >
                                     <Input placeholder="0.6" />
                                   </Form.Item>
+                                  <Form.Item
+                                    {...gridField}
+                                    label="Trailing"
+                                    name={[gridField.name, 'TRAILING']}
+                                    fieldKey={[gridField.fieldKey, 'TRAILING']}
+                                    valuePropName="checked"
+                                  >
+                                    <Checkbox />
+                                  </Form.Item>
 
                                   <MinusCircleOutlined
                                     onClick={() => {
