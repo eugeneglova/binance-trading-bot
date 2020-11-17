@@ -140,9 +140,11 @@ const start = async (em, index, contents) => {
 
   const onPositionNew = () => {
     console.log(config.SYMBOL, config.SIDE, 'NEW POS')
+    const p = state.position
     em.emit('tg:newPosition', {
       symbol: config.SYMBOL,
       side: config.SIDE,
+      p,
     })
     createTpOrders()
   }
@@ -418,13 +420,15 @@ const start = async (em, index, contents) => {
     }
   }
 
-  const onPositionUpdate = _.debounce(onPositionUpdateOriginal, 1000)
+  const onPositionUpdate = _.debounce(onPositionUpdateOriginal, 1500)
 
   const onPositionClose = async () => {
     console.log(config.SYMBOL, config.SIDE, 'CLOSE POS')
     em.emit('tg:closePosition', {
       symbol: config.SYMBOL,
       side: config.SIDE,
+      pl: state.pl,
+      count: config.TRADES_COUNT + 1,
     })
     state.lOrders = []
     state.tpOrders = []
@@ -434,8 +438,12 @@ const start = async (em, index, contents) => {
     config = store.get().POSITIONS[index]
   }
 
-  const accountUpdate = async (positions) => {
+  const accountUpdate = async (data, positions) => {
     console.log(config.SYMBOL, config.SIDE, 'account update')
+
+    const wb = parseFloat(_.get(_.find(data.a.B, ({ a }) => a === 'USDT'), 'wb'))
+    state.pl = state.wb ? wb - state.wb : 0
+    state.wb = wb
 
     const p = _.find(positions, ({ symbol, positionSide, positionAmt }) => (
       symbol === config.SYMBOL && (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) && parseFloat(positionAmt) !== 0
@@ -545,7 +553,7 @@ const connect = (em) => {
         console.error('ERROR: accountUpdate positionRisk problem')
         return
       }
-      em.emit('accountUpdate', positions)
+      em.emit('accountUpdate', data, positions)
     } else if (type === 'ORDER_TRADE_UPDATE') {
       // orderTradeUpdate(data)
       em.emit('orderTradeUpdate', data)
