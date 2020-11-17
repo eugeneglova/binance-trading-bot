@@ -641,8 +641,46 @@ const cancelOrders = async (index) => {
   cancelOpenOrders()
 }
 
+const addStopOrder = async (index) => {
+  const store = new Store()
+  let config = store.get().POSITIONS[index]
+
+  const binance = Binance({
+    APIKEY: store.get().APIKEY,
+    APISECRET: store.get().APISECRET,
+  })
+
+  const positions = await binance.futures
+    .positionRisk()
+    .catch((e) => console.error(new Error().stack) || console.error(e))
+  if (!positions) {
+    console.error('ERROR: check positions')
+    return
+  }
+
+  const p = _.find(positions, ({ symbol, positionSide, positionAmt }) => (
+    symbol === config.SYMBOL && (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) && parseFloat(positionAmt) !== 0
+  ))
+
+  if (!p) return
+
+  const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
+
+  const spPrice = precision(getPLPrice(parseFloat(p.entryPrice), 0.05, SIDE_SIGN))
+
+  await binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
+    config.SYMBOL,
+    Math.abs(parseFloat(p.positionAmt)),
+    spPrice,
+    {
+      positionSide: p.positionSide,
+    },
+  ).catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
+}
+
 module.exports = {
   start,
   connect,
   cancelOrders,
+  addStopOrder,
 }

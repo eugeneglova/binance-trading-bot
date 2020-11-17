@@ -84,9 +84,6 @@ function App() {
               onStopTelegramBot={() => {
                 ipcRenderer.send('stopTelegramBot')
               }}
-              onCancelOrders={(index) => {
-                ipcRenderer.send('cancelOrders', index)
-              }}
             />
           )}
         </div>

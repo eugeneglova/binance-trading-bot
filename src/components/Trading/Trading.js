@@ -26,7 +26,6 @@ const Trading = ({
   isRunning = [], onStart, onStop,
   onConnect, onDisconnect, isWSConnected,
   onStartTelegramBot, onStopTelegramBot, isTelegramBotStarted,
-  onCancelOrders,
 }) => {
   const store = new Store()
   const config = store.get()
@@ -191,10 +190,18 @@ const Trading = ({
               <Button
                 type="primary"
                 onClick={() => {
-                  onCancelOrders(index)
+                  ipcRenderer.send('cancelOrders', index)
                 }}
               >
                 Cancel Orders
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  ipcRenderer.send('addStopOrder', index)
+                }}
+              >
+                Add Stop Without Loss
               </Button>
             </Space>
 
