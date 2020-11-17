@@ -170,11 +170,13 @@ const Settings = () => {
                       <Checkbox />
                     </Form.Item>
 
-                    <MinusCircleOutlined
-                      onClick={() => {
-                        remove(field.name)
-                      }}
-                    />
+                    <Button type="primary" onClick={() => remove(field.name)}>
+                      Remove
+                    </Button>
+
+                    <Button type="primary" onClick={() => add(initialValues.POSITIONS[field.fieldKey])}>
+                      Clone
+                    </Button>
                   </Space>
 
                   <Collapse>
