@@ -491,20 +491,8 @@ const start = async (em, index, contents) => {
     symbol === config.SYMBOL && (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) && parseFloat(positionAmt) !== 0
   ))
   // console.log(config.SYMBOL, config.SIDE, p)
-  if (p) {
-    state.position = p
-  } else {
-    await cancelOpenOrders()
-    if (config.SIDE === 'AUTO') {
-      createOrders('LONG')
-      createOrders('SHORT')
-    } else {
-      createOrders(config.SIDE)
-    }
-  }
-  em.on('checkPositions', checkPositions)
 
-  const createOrdersIntervalId = setInterval(async () => {
+  const createNewOrders = async () => {
     if (state.position) return
     if (config.TRADES_COUNT >= config.TRADES_TILL_STOP) return
     if (moment().isBefore(config.DATETIME_RANGE[0]) || moment().isAfter(config.DATETIME_RANGE[1])) return
@@ -514,9 +502,21 @@ const start = async (em, index, contents) => {
       createOrders('LONG')
       createOrders('SHORT')
     } else {
-      createOrders(config.SIDE)
+      if (!store.get(`STOP_${config.SIDE}`)) {
+        createOrders(config.SIDE)
+      }
     }
-  }, 2 * 60 * 1000)
+  }
+
+  if (p) {
+    state.position = p
+  } else {
+    await createNewOrders()
+  }
+
+  em.on('checkPositions', checkPositions)
+
+  const createOrdersIntervalId = setInterval(createNewOrders, 2 * 60 * 1000)
 
   const stop = async () => {
     state.lOrders = []

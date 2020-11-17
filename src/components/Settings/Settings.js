@@ -107,6 +107,25 @@ const Settings = () => {
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
     >
+      <Form.Item
+        label="Stop all new Long"
+        name="STOP_LONG"
+      >
+        <Checkbox />
+      </Form.Item>
+      <Form.Item
+        label="Stop all new Short"
+        name="STOP_SHORT"
+      >
+        <Checkbox />
+      </Form.Item>
+
+      <Form.Item>
+        <Button type="primary" htmlType="submit">
+          Save
+        </Button>
+      </Form.Item>
+
       <Form.List name="POSITIONS">
         {(fields, { add, remove }) => {
           return (
