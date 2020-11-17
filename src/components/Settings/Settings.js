@@ -110,12 +110,14 @@ const Settings = () => {
       <Form.Item
         label="Stop all new Long"
         name="STOP_LONG"
+        valuePropName="checked"
       >
         <Checkbox />
       </Form.Item>
       <Form.Item
         label="Stop all new Short"
         name="STOP_SHORT"
+        valuePropName="checked"
       >
         <Checkbox />
       </Form.Item>
