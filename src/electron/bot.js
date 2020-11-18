@@ -243,7 +243,7 @@ const start = async (em, index, contents) => {
       })()
     }
 
-    const spGridConfig = config.SP_GRID[spGridIndex] || _.last(config.SP_GRID)
+    const spGridConfig = config.SP_GRID[spGridIndex]
     const diff = plPerc - spGridConfig.TRIGGER_PERCENT
     const plus = diff > 0 && spGridConfig.TRAILING ? diff : 0
     const spPrice = precision(
@@ -359,14 +359,14 @@ const start = async (em, index, contents) => {
 
     if (
       state.spOrder &&
-      plPerc > config.SP_GRID[spGridIndex].MIN_PERCENT &&
+      plPerc > spGridConfig.MIN_PERCENT &&
       (parseFloat(state.spOrder.origQty) !== Math.abs(parseFloat(p.positionAmt)) ||
         parseFloat(state.spOrder.stopPrice) !== spPrice)
     ) {
-      console.log(config.SYMBOL, config.SIDE, 'update sp order', amount, spPrice)
+      console.log(config.SYMBOL, config.SIDE, 'debug update sp order', { amount, spPrice, plPerc, min: spGridConfig.MIN_PERCENT, spr: state.spOrder.stopPrice, spq: state.spOrder.origQty, pa: p.positionAmt })
       binance.futures
         .cancel(config.SYMBOL, { orderId: state.spOrder.orderId })
-        .catch((e) => console.log(config.SYMBOL, config.SIDE, e))
+        .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
       binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
         config.SYMBOL,
         Math.abs(amount),
@@ -374,7 +374,7 @@ const start = async (em, index, contents) => {
         {
           positionSide: p.positionSide,
         },
-      ).catch((e) => console.log(config.SYMBOL, config.SIDE, e))
+      ).catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
       state.spOrder = null
     }
 
