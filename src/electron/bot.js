@@ -340,6 +340,7 @@ const start = async (em, index, contents) => {
       '(',
       precision(plPerc),
       '%)',
+      precision(posSize),
       `[${config.TRADES_COUNT}/${config.TRADES_TILL_STOP}]`,
     )
     if (state.spOrder) {
