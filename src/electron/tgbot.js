@@ -15,10 +15,17 @@ const start = (em) => {
 
   const onNewPosition = (data) => {
     const { symbol, side, p } = data
-    bot.telegram.sendMessage(config.TELEGRAM_USER_ID, `Open ${symbol} ${side}\n${parseFloat(p.entryPrice)}`)
+    bot.telegram.sendMessage(config.TELEGRAM_USER_ID, `Open ${symbol} ${side}\n${Math.abs(parseFloat(p.positionAmt))} @${parseFloat(p.entryPrice)}`)
   }
 
   em.on('tg:newPosition', onNewPosition)
+
+  const onUpdatePosition = (data) => {
+    const { symbol, side, p } = data
+    bot.telegram.sendMessage(config.TELEGRAM_USER_ID, `Update ${symbol} ${side}\n${Math.abs(parseFloat(p.positionAmt))} @${parseFloat(p.entryPrice)}`)
+  }
+
+  em.on('tg:updatePosition', onUpdatePosition)
 
   const onClosePosition = (data) => {
     const { symbol, side, pl, count } = data

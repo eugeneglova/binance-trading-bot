@@ -456,6 +456,11 @@ const start = async (em, index, contents) => {
       } else {
         state.position = p
         onPositionUpdate()
+        em.emit('tg:updatePosition', {
+          symbol: config.SYMBOL,
+          side: config.SIDE,
+          p,
+        })
       }
     } else if (state.position) {
       state.position = null
