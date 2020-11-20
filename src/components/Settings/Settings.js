@@ -1,6 +1,6 @@
 import React from 'react'
 import moment from 'moment'
-import { Form, Input, Button, Collapse, DatePicker, Radio, Space } from 'antd'
+import { Form, Input, Checkbox, Button, Collapse, DatePicker, Radio, Space } from 'antd'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import Store from 'electron-store'
 
@@ -107,6 +107,27 @@ const Settings = () => {
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
     >
+      <Form.Item
+        label="Stop all new Long"
+        name="STOP_LONG"
+        valuePropName="checked"
+      >
+        <Checkbox />
+      </Form.Item>
+      <Form.Item
+        label="Stop all new Short"
+        name="STOP_SHORT"
+        valuePropName="checked"
+      >
+        <Checkbox />
+      </Form.Item>
+
+      <Form.Item>
+        <Button type="primary" htmlType="submit">
+          Save
+        </Button>
+      </Form.Item>
+
       <Form.List name="POSITIONS">
         {(fields, { add, remove }) => {
           return (
@@ -141,11 +162,23 @@ const Settings = () => {
                       />
                     </Form.Item>
 
-                    <MinusCircleOutlined
-                      onClick={() => {
-                        remove(field.name)
-                      }}
-                    />
+                    <Form.Item
+                      {...field}
+                      label="Auto start"
+                      name={[field.name, 'AUTO_START']}
+                      fieldKey={[field.fieldKey, 'AUTO_START']}
+                      valuePropName="checked"
+                    >
+                      <Checkbox />
+                    </Form.Item>
+
+                    <Button type="primary" onClick={() => remove(field.name)}>
+                      Remove
+                    </Button>
+
+                    <Button type="primary" onClick={() => add(initialValues.POSITIONS[field.fieldKey])}>
+                      Clone
+                    </Button>
                   </Space>
 
                   <Collapse>
@@ -414,6 +447,15 @@ const Settings = () => {
                                     rules={[{ required: true, message: 'Missing value' }]}
                                   >
                                     <Input placeholder="0.6" />
+                                  </Form.Item>
+                                  <Form.Item
+                                    {...gridField}
+                                    label="Trailing"
+                                    name={[gridField.name, 'TRAILING']}
+                                    fieldKey={[gridField.fieldKey, 'TRAILING']}
+                                    valuePropName="checked"
+                                  >
+                                    <Checkbox />
                                   </Form.Item>
 
                                   <MinusCircleOutlined

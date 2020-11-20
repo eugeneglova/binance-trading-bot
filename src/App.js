@@ -6,16 +6,23 @@ import Test from './components/Test'
 import ApiKeys from './components/ApiKeys'
 import Settings from './components/Settings'
 import Trading from './components/Trading'
+import Telegram from './components/Telegram'
 
 const { Header, Content, Footer } = Layout
 
 function App() {
   const [isRunning, setIsRunning] = useState()
+  const [isWSConnected, setIsWSConnected] = useState()
+  const [isTelegramBotStarted, setIsTelegramBotStarted] = useState()
   const [page, setPage] = useState('trading')
 
   useEffect(() => {
     setIsRunning(JSON.parse(ipcRenderer.sendSync('getIsRunning')))
+    setIsWSConnected(JSON.parse(ipcRenderer.sendSync('getIsWSConnected')))
+    setIsTelegramBotStarted(JSON.parse(ipcRenderer.sendSync('getIsTelegramBotStarted')))
     ipcRenderer.on('onChangeIsRunning', (event, value) => setIsRunning(JSON.parse(value)))
+    ipcRenderer.on('onChangeIsWSConnected', (event, value) => setIsWSConnected(JSON.parse(value)))
+    ipcRenderer.on('onChangeIsTelegramBotStarted', (event, value) => setIsTelegramBotStarted(JSON.parse(value)))
   }, [])
 
   return (
@@ -32,6 +39,7 @@ function App() {
           <Menu.Item key="settings">Settings</Menu.Item>
           <Menu.Item key="apikeys">Api Keys</Menu.Item>
           <Menu.Item key="test">Test</Menu.Item>
+          <Menu.Item key="telegram">Telegram</Menu.Item>
         </Menu>
       </Header>
       <Content style={{ padding: '0 50px' }}>
@@ -41,6 +49,9 @@ function App() {
           <Breadcrumb.Item>App</Breadcrumb.Item>
         </Breadcrumb>
         <div className="site-layout-content">
+          {page === 'telegram' && (
+            <Telegram />
+          )}
           {page === 'test' && (
             <Test />
           )}
@@ -58,6 +69,20 @@ function App() {
               }}
               onStop={(index) => {
                 ipcRenderer.send('stop', index)
+              }}
+              isWSConnected={isWSConnected}
+              onConnect={() => {
+                ipcRenderer.send('connect')
+              }}
+              onDisconnect={() => {
+                ipcRenderer.send('disconnect')
+              }}
+              isTelegramBotStarted={isTelegramBotStarted}
+              onStartTelegramBot={() => {
+                ipcRenderer.send('startTelegramBot')
+              }}
+              onStopTelegramBot={() => {
+                ipcRenderer.send('stopTelegramBot')
               }}
             />
           )}

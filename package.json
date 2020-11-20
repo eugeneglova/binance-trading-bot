@@ -1,6 +1,6 @@
 {
   "name": "binance-trading-bot",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Binance Trading Bot",
   "main": "src/electron/electron.js",
   "homepage": "./",
@@ -19,7 +19,8 @@
     "node-binance-api-ext": "^2.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.3"
+    "react-scripts": "3.4.3",
+    "telegraf": "^3.38.0"
   },
   "scripts": {
     "btc-long": "cross-env NODE_ENV=btс-long node index.js",

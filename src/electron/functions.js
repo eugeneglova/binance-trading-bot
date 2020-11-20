@@ -61,6 +61,7 @@ const getOrders = ({
 }) => {
   const res = _.range(0, count).reduce(
     (acc, i) => {
+      if (acc.price < 0) return acc
       // const price = acc.price - sideSign * acc.price * 0.0055 * (i * 0.01 + 1)
       let price = getNextPrice(acc.price, i, sideSign, grid)
       // const amount = acc.amount * (i ? 2 : 1)
@@ -89,7 +90,7 @@ const getOrders = ({
 }
 
 // const x = getOrders({
-//   price: 11350,
+//   price: 1,
 //   amount: 0.002,
 //   count: 7,
 //   sideSign: 1,
@@ -119,7 +120,7 @@ const getPosSize = (
   ],
 ) => {
   const orders = getOrders({
-    price: 1,
+    price: 10000,
     amount: initAmount,
     count,
     sideSign: 1,
@@ -149,6 +150,88 @@ const getPosSize = (
 // console.log(getPosSize(0.008, 0.002, 7, grid))
 // console.log(getPosSize(0.018, 0.002, 7, grid))
 // console.log(getPosSize(0.028, 0.002, 7, grid))
+
+// const conf = {
+//   "SYMBOL": "BTCUSDT",
+//   "SIDE": "SHORT",
+//   "AMOUNT": "0.005",
+//   "PRICE_TYPE": "distance",
+//   "PRICE": 10000,
+//   "PRICE_DISTANCE": 2,
+//   "GRID": [
+//     {
+//       "PRICE_STEP": "40",
+//       "X_AMOUNT": 1
+//     },
+//     {
+//       "PRICE_STEP": "40",
+//       "X_AMOUNT": 3
+//     },
+//     {
+//       "PRICE_STEP": "100",
+//       "X_AMOUNT": 3
+//     },
+//     {
+//       "PRICE_STEP": "120",
+//       "X_AMOUNT": 1.6
+//     },
+//     {
+//       "PRICE_STEP": "160",
+//       "X_AMOUNT": 1.6
+//     },
+//     {
+//       "PRICE_STEP": "240",
+//       "X_AMOUNT": 2
+//     }
+//   ],
+//   "TP_MIN_PERCENT": "0.11",
+//   "TP_MAX_PERCENT": 0.6,
+//   "TP_MAX_COUNT": 6,
+//   "SP_PERCENT": 0.1,
+//   "SP_PERCENT_TRIGGER": 0.2,
+//   "SL_PERCENT": "-5",
+//   "TRADES_COUNT": 0,
+//   "TRADES_TILL_STOP": 1000,
+//   "DATETIME_RANGE": [
+//     "2020-10-01T20:22:34.022Z",
+//     "2020-11-26T20:22:34.022Z"
+//   ],
+//   "TP_GRID": [
+//     {
+//       "MIN_PERCENT": "0.3",
+//       "MAX_PERCENT": "1",
+//       "MAX_COUNT": 6
+//     },
+//     {
+//       "MIN_PERCENT": "0.25",
+//       "MAX_PERCENT": "0.9",
+//       "MAX_COUNT": 6
+//     },
+//     {
+//       "MIN_PERCENT": 0.18,
+//       "MAX_PERCENT": 0.6,
+//       "MAX_COUNT": 5
+//     },
+//     {
+//       "MIN_PERCENT": 0.14,
+//       "MAX_PERCENT": 0.5,
+//       "MAX_COUNT": 4
+//     },
+//     {
+//       "MIN_PERCENT": 0.11,
+//       "MAX_PERCENT": 0.4,
+//       "MAX_COUNT": 3
+//     },
+//     {
+//       "MIN_PERCENT": 0.1,
+//       "MAX_PERCENT": 0.3,
+//       "MAX_COUNT": 3
+//     }
+//   ],
+// }
+// const posSize = getPosSize(Math.abs(parseFloat(-0.025)), conf.AMOUNT, conf.GRID.length + 1, conf.GRID)
+// const posSize = getPosSize(0.025, 0.005, 7, conf.GRID)
+// console.log(posSize)
 
 const getOrdersAmount = (orders, key = 'origQty') =>
   _.reduce(orders, (acc, order) => acc + parseFloat(order[key]), 0)

@@ -22,7 +22,11 @@ const precision = (value, decimals = getDecimals(value)) =>
 
 const getPLPerc = (basePrice, price, sideSign) => ((price / basePrice - 1) / sideSign) * 100
 
-const Trading = ({ isRunning = [], onStart, onStop }) => {
+const Trading = ({
+  isRunning = [], onStart, onStop,
+  onConnect, onDisconnect, isWSConnected,
+  onStartTelegramBot, onStopTelegramBot, isTelegramBotStarted,
+}) => {
   const store = new Store()
   const config = store.get()
 
@@ -98,6 +102,58 @@ const Trading = ({ isRunning = [], onStart, onStop }) => {
   return (
     <div>
       <div>
+        <div>
+          <Button
+            type="primary"
+            onClick={() => {
+              onConnect()
+            }}
+            disabled={isWSConnected}
+          >
+            Connect
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => {
+              onDisconnect()
+            }}
+            disabled={!isWSConnected}
+          >
+            Disconnect
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => {
+              onDisconnect()
+              onConnect()
+            }}
+            disabled={!isWSConnected}
+          >
+            Reconnect
+          </Button>
+        </div>
+
+        <div>
+          <Button
+            type="primary"
+            onClick={() => {
+              onStartTelegramBot()
+            }}
+            disabled={isTelegramBotStarted}
+          >
+            Start Telegram Bot
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => {
+              onStopTelegramBot()
+            }}
+            disabled={!isTelegramBotStarted}
+          >
+            Stop Telegram Bot
+          </Button>
+        </div>
+
         {config.POSITIONS.map((pos, index) => (
           <div>
             <Space>
@@ -131,9 +187,25 @@ const Trading = ({ isRunning = [], onStart, onStop }) => {
               >
                 Restart
               </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  ipcRenderer.send('cancelOrders', index)
+                }}
+              >
+                Cancel Orders
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  ipcRenderer.send('addStopOrder', index)
+                }}
+              >
+                Add Stop Without Loss
+              </Button>
             </Space>
 
-            {isRunning[index] && (
+            {false && isRunning[index] && (
               <div>
                 {botState[index] && botState[index].position && (
                   <div>
