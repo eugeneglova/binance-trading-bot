@@ -150,7 +150,7 @@ const start = async (em, index, contents) => {
   }
 
   const onPositionUpdateOriginal = async () => {
-    // console.log(config.SYMBOL, config.SIDE, 'UPDATE POS')
+    console.log(config.SYMBOL, config.SIDE, 'UPDATE POS')
     const p = state.position
     const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
     // console.log(config.SYMBOL, config.SIDE, p)
@@ -433,6 +433,7 @@ const start = async (em, index, contents) => {
     state.lOrders = []
     state.tpOrders = []
     state.slOrder = null
+    state.spOrder = null
     cancelOpenOrders()
     store.set(`POSITIONS.${index}.TRADES_COUNT`, config.TRADES_COUNT + 1)
     config = store.get().POSITIONS[index]
