@@ -341,11 +341,12 @@ const start = async (em, index, contents) => {
       precision(plPerc),
       '%)',
       precision(posSize),
+      state.spOrder ? `sp: ${spPrice}` : '',
       `[${config.TRADES_COUNT}/${config.TRADES_TILL_STOP}]`,
     )
-    if (state.spOrder) {
-      console.log(config.SYMBOL, config.SIDE, 'sp', spPrice, diff)
-    }
+    // if (state.spOrder) {
+    //   console.log(config.SYMBOL, config.SIDE, 'sp', spPrice, diff)
+    // }
     if (!state.spOrder && diff > 0) {
       console.log(config.SYMBOL, config.SIDE, 'create sp order', { spPrice, amount })
       await binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
