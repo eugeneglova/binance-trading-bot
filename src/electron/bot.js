@@ -546,6 +546,7 @@ const connect = (em) => {
       reconnect()
     } else if (type === 'ACCOUNT_UPDATE') {
       if (data.a.m !== 'ORDER') return
+      await binance.useServerTime()
       const positions = await binance.futures
         .positionRisk()
         .catch((e) => console.error(new Error().stack) || console.error(e))
@@ -565,6 +566,7 @@ const connect = (em) => {
 
   const getDataStream = async () => {
     console.log('get data stream')
+    await binance.useServerTime()
     const dataStream = await binance.futures
       .getDataStream()
       .catch((e) => console.error(new Error().stack) || console.error(e))
@@ -631,6 +633,7 @@ const cancelOrders = async (index) => {
   }
 
   const cancelOpenOrders = async () => {
+    await binance.useServerTime()
     const allOpenOrders = await binance.futures
       .openOrders(config.SYMBOL)
       .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
@@ -650,6 +653,7 @@ const addStopOrder = async (index) => {
     APISECRET: store.get().APISECRET,
   })
 
+  await binance.useServerTime()
   const positions = await binance.futures
     .positionRisk()
     .catch((e) => console.error(new Error().stack) || console.error(e))
