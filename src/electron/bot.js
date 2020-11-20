@@ -453,7 +453,7 @@ const start = async (em, index, contents) => {
       if (!state.position) {
         state.position = p
         onPositionNew()
-      } else {
+      } else if (state.position.positionAmt !== p.positionAmt) {
         state.position = p
         onPositionUpdate()
         em.emit('tg:updatePosition', {
@@ -556,13 +556,13 @@ const connect = (em) => {
         .positionRisk()
         .catch((e) => console.error(new Error().stack) || console.error(e))
       if (!positions) {
-        console.error('ERROR: accountUpdate positionRisk problem')
+        console.error('ACCOUNT_UPDATE ERROR: accountUpdate positionRisk problem')
         return
       }
       em.emit('accountUpdate', data, positions)
     } else if (type === 'ORDER_TRADE_UPDATE') {
       // orderTradeUpdate(data)
-      em.emit('orderTradeUpdate', data)
+      // em.emit('orderTradeUpdate', data)
     } else if (type === 'MARGIN_CALL') {
     } else {
       console.error('Unexpected userFuturesData: ' + type)
