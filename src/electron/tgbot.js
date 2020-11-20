@@ -14,6 +14,9 @@ const start = (em) => {
   const bot = new Telegraf(config.TELEGRAM_BOT_TOKEN)
 
   const onNewPosition = (data) => {
+    if (!config.TELEGRAM_NOTIFY_NEW_POS) {
+      return
+    }
     const { symbol, side, p } = data
     bot.telegram.sendMessage(config.TELEGRAM_USER_ID, `Open ${symbol} ${side}\n${Math.abs(parseFloat(p.positionAmt))} @ ${parseFloat(p.entryPrice)}`)
   }
@@ -21,6 +24,9 @@ const start = (em) => {
   em.on('tg:newPosition', onNewPosition)
 
   const onUpdatePosition = (data) => {
+    if (!config.TELEGRAM_NOTIFY_UPDATE_POS) {
+      return
+    }
     const { symbol, side, p } = data
     bot.telegram.sendMessage(config.TELEGRAM_USER_ID, `Update ${symbol} ${side}\n${Math.abs(parseFloat(p.positionAmt))} @ ${parseFloat(p.entryPrice)}`)
   }
@@ -28,6 +34,9 @@ const start = (em) => {
   em.on('tg:updatePosition', onUpdatePosition)
 
   const onClosePosition = (data) => {
+    if (!config.TELEGRAM_NOTIFY_CLOSE_POS) {
+      return
+    }
     const { symbol, side, pl, count } = data
     const plValue = parseFloat(pl)
     const plSign = Math.sign(plValue) > 0 ? '+' : ''

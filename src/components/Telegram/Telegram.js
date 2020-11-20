@@ -73,6 +73,30 @@ const Telegram = () => {
         <Checkbox />
       </Form.Item>
 
+      <Form.Item
+        label="Notify on open position"
+        name="TELEGRAM_NOTIFY_NEW_POS"
+        valuePropName="checked"
+      >
+        <Checkbox />
+      </Form.Item>
+
+      <Form.Item
+        label="Notify on update position"
+        name="TELEGRAM_NOTIFY_UPDATE_POS"
+        valuePropName="checked"
+      >
+        <Checkbox />
+      </Form.Item>
+
+      <Form.Item
+        label="Notify on close position"
+        name="TELEGRAM_NOTIFY_CLOSE_POS"
+        valuePropName="checked"
+      >
+        <Checkbox />
+      </Form.Item>
+
       <Form.Item {...tailLayout}>
         <Button type="primary" htmlType="submit">
           Save
