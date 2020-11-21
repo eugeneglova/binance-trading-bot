@@ -150,7 +150,7 @@ const start = async (em, index, contents) => {
   }
 
   const onPositionUpdateOriginal = async () => {
-    console.log(config.SYMBOL, config.SIDE, 'UPDATE POS')
+    // console.log(config.SYMBOL, config.SIDE, 'UPDATE POS')
     const p = state.position
     const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
     // console.log(config.SYMBOL, config.SIDE, p)
@@ -457,13 +457,23 @@ const start = async (em, index, contents) => {
         state.position = p
         onPositionNew()
       } else if (state.position.positionAmt !== p.positionAmt) {
+        const positionAmtDiff = Math.abs(parseFloat(state.position.positionAmt)) - Math.abs(parseFloat(p.positionAmt))
         state.position = p
         onPositionUpdate()
-        em.emit('tg:updatePosition', {
-          symbol: config.SYMBOL,
-          side: config.SIDE,
-          p,
-        })
+        if (positionAmtDiff < 0) {
+          em.emit('tg:increasePosition', {
+            symbol: config.SYMBOL,
+            side: config.SIDE,
+            p,
+          })
+        } else {
+          em.emit('tg:decreasePosition', {
+            symbol: config.SYMBOL,
+            side: config.SIDE,
+            p,
+            pl: state.pl,
+          })
+        }
       }
     } else if (state.position) {
       state.position = null

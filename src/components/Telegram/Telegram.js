@@ -82,8 +82,16 @@ const Telegram = () => {
       </Form.Item>
 
       <Form.Item
-        label="Notify on update position"
-        name="TELEGRAM_NOTIFY_UPDATE_POS"
+        label="Notify on increase position"
+        name="TELEGRAM_NOTIFY_INCREASE_POS"
+        valuePropName="checked"
+      >
+        <Checkbox />
+      </Form.Item>
+
+      <Form.Item
+        label="Notify on decrease (take profit) position"
+        name="TELEGRAM_NOTIFY_DECREASE_POS"
         valuePropName="checked"
       >
         <Checkbox />

@@ -23,15 +23,27 @@ const start = (em) => {
 
   em.on('tg:newPosition', onNewPosition)
 
-  const onUpdatePosition = (data) => {
-    if (!config.TELEGRAM_NOTIFY_UPDATE_POS) {
+  const onIncreasePosition = (data) => {
+    if (!config.TELEGRAM_NOTIFY_INCREASE_POS) {
       return
     }
     const { symbol, side, p } = data
-    bot.telegram.sendMessage(config.TELEGRAM_USER_ID, `Update ${symbol} ${side}\n${Math.abs(parseFloat(p.positionAmt))} @ ${parseFloat(p.entryPrice)}`)
+    bot.telegram.sendMessage(config.TELEGRAM_USER_ID, `Increase ${symbol} ${side}\n${Math.abs(parseFloat(p.positionAmt))} @ ${parseFloat(p.entryPrice)}`)
   }
 
-  em.on('tg:updatePosition', onUpdatePosition)
+  em.on('tg:increasePosition', onIncreasePosition)
+
+  const onDecreasePosition = (data) => {
+    if (!config.TELEGRAM_NOTIFY_DECREASE_POS) {
+      return
+    }
+    const { symbol, side, p, pl } = data
+    const plValue = parseFloat(pl)
+    const plSign = Math.sign(plValue) > 0 ? '+' : ''
+    bot.telegram.sendMessage(config.TELEGRAM_USER_ID, `Take Profit ${symbol} ${side}\n${Math.abs(parseFloat(p.positionAmt))} @ ${parseFloat(p.entryPrice)}\n${plSign}${precision(plValue)}`)
+  }
+
+  em.on('tg:decreasePosition', onDecreasePosition)
 
   const onClosePosition = (data) => {
     if (!config.TELEGRAM_NOTIFY_CLOSE_POS) {
@@ -56,6 +68,8 @@ const start = (em) => {
   const stop = () => {
     clearInterval(configIntervalId)
     em.off('tg:newPosition', onNewPosition)
+    em.off('tg:increasePosition', onIncreasePosition)
+    em.off('tg:decreasePosition', onDecreasePosition)
     em.off('tg:closePosition', onClosePosition)
     em.off('testmessage', onTestMessage)
     bot.stop()
