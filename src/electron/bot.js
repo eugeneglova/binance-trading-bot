@@ -32,6 +32,8 @@ const start = async (em, index, contents) => {
   const binance = Binance({
     APIKEY: store.get().APIKEY,
     APISECRET: store.get().APISECRET,
+    useServerTime: true,
+    recvWindow: 15000,
   })
 
   const cancelOrders = async (orders) => {
@@ -555,6 +557,8 @@ const connect = (em) => {
   const binance = Binance({
     APIKEY: store.get().APIKEY,
     APISECRET: store.get().APISECRET,
+    useServerTime: true,
+    recvWindow: 15000,
   })
 
   const userFuturesDataHandler = async (data) => {
@@ -638,6 +642,8 @@ const cancelOrders = async (index) => {
   const binance = Binance({
     APIKEY: store.get().APIKEY,
     APISECRET: store.get().APISECRET,
+    useServerTime: true,
+    recvWindow: 15000,
   })
 
   const cancelOrders = async (orders) => {
@@ -669,6 +675,8 @@ const addStopOrder = async (index) => {
   const binance = Binance({
     APIKEY: store.get().APIKEY,
     APISECRET: store.get().APISECRET,
+    useServerTime: true,
+    recvWindow: 15000,
   })
 
   await binance.useServerTime()
