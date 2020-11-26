@@ -201,7 +201,13 @@ const start = async (em, index, contents) => {
     createTpOrders()
   }
 
+  const getSide = () => {
+    const p = state.position
+    return p ? p.positionSide : config.SIDE
+  }
+
   const getLimitOrders = async () => {
+    const SIDE_SIGN = getSide() === 'SHORT' ? -1 : 1
     console.log(config.SYMBOL, config.SIDE, 'getting limit orders')
     const allOpenOrders = await binance.futures
       .openOrders(config.SYMBOL)
@@ -244,7 +250,7 @@ const start = async (em, index, contents) => {
     const plPerc = getPLPerc(p.entryPrice, p.markPrice, SIDE_SIGN)
     if (!state.lOrders.length) {
       const limitOrders = await getLimitOrders()
-      if (orders) {
+      if (limitOrders) {
         state.lOrders = limitOrders
       }
     }
