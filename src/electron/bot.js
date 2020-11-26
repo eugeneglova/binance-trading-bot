@@ -183,9 +183,9 @@ const start = async (em, index, contents) => {
     contents.send('onPositionUpdate', { index, state })
     const plPerc = getPLPerc(p.entryPrice, p.markPrice, SIDE_SIGN)
     if (!state.lOrders.length) {
-      const orders = await getLimitOrders()
+      const limitOrders = await getLimitOrders()
       if (orders) {
-        state.lOrders = orders
+        state.lOrders = limitOrders
       }
     }
     if (!state.tpOrders.length) {
