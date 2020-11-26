@@ -151,6 +151,24 @@ const start = async (em, index, contents) => {
     createTpOrders()
   }
 
+  const getLimitOrders = async () => {
+    console.log(config.SYMBOL, config.SIDE, 'getting limit orders')
+    const allOpenOrders = await binance.futures
+      .openOrders(config.SYMBOL)
+      .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
+    const lSide = SIDE_SIGN > 0 ? 'BUY' : 'SELL'
+    const orders = _.filter(
+      allOpenOrders,
+      (o) => o.positionSide === p.positionSide && o.type === 'LIMIT' && o.side === lSide,
+    )
+    if (!orders.length) return
+    // console.log(config.SYMBOL, config.SIDE, orders)
+    orders.forEach((order, i) => {
+      console.log(config.SYMBOL, config.SIDE, `l ${i + 1}:`, order.origQty, order.price)
+    })
+    return orders
+  }
+
   const onPositionUpdateOriginal = async () => {
     // console.log(config.SYMBOL, config.SIDE, 'UPDATE POS')
     const p = state.position
@@ -165,23 +183,10 @@ const start = async (em, index, contents) => {
     contents.send('onPositionUpdate', { index, state })
     const plPerc = getPLPerc(p.entryPrice, p.markPrice, SIDE_SIGN)
     if (!state.lOrders.length) {
-      await (async () => {
-        console.log(config.SYMBOL, config.SIDE, 'getting limit orders')
-        const allOpenOrders = await binance.futures
-          .openOrders(config.SYMBOL)
-          .catch((e) => console.log(config.SYMBOL, config.SIDE) || console.error(new Error().stack) || console.error(e))
-        const lSide = SIDE_SIGN > 0 ? 'BUY' : 'SELL'
-        const orders = _.filter(
-          allOpenOrders,
-          (o) => o.positionSide === p.positionSide && o.type === 'LIMIT' && o.side === lSide,
-        )
-        if (!orders.length) return
-        // console.log(config.SYMBOL, config.SIDE, orders)
-        orders.forEach((order, i) => {
-          console.log(config.SYMBOL, config.SIDE, `l ${i + 1}:`, order.origQty, order.price)
-        })
+      const orders = await getLimitOrders()
+      if (orders) {
         state.lOrders = orders
-      })()
+      }
     }
     if (!state.tpOrders.length) {
       await (async () => {
