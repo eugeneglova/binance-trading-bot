@@ -201,13 +201,9 @@ const start = async (em, index, contents) => {
     createTpOrders()
   }
 
-  const getSide = () => {
-    const p = state.position
-    return p ? p.positionSide : config.SIDE
-  }
-
   const getLimitOrders = async () => {
-    const SIDE_SIGN = getSide() === 'SHORT' ? -1 : 1
+    const p = state.position
+    const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
     console.log(config.SYMBOL, config.SIDE, 'getting limit orders')
     const allOpenOrders = await binance.futures
       .openOrders(config.SYMBOL)
@@ -353,6 +349,41 @@ const start = async (em, index, contents) => {
       1 / Math.pow(10, state.quantityPrecision),
     )
 
+    const addLimitOrders = async () => {
+      const amount = config.AMOUNT
+      const orders = getOrders({
+        price: p.entryPrice,
+        amount,
+        count: config.GRID.length + 1,
+        sideSign: SIDE_SIGN,
+        start: Math.ceil(posSize) - 1,
+        grid: config.GRID,
+        pricePrecision: state.pricePrecision,
+        quantityPrecision: state.quantityPrecision,
+      })
+      orders.shift()
+      console.log(config.SYMBOL, config.SIDE, 'add limit orders')
+      await Promise.all(
+        _.map(orders, (o) =>
+          binance.futures[SIDE_SIGN > 0 ? 'buy' : 'sell'](
+            config.SYMBOL,
+            Math.abs(o.amount),
+            o.price,
+            {
+              positionSide: p.positionSide,
+              postOnly: true,
+            },
+          ).catch(
+            (e) =>
+              console.log(config.SYMBOL, config.SIDE) ||
+              console.error(new Error().stack) ||
+              console.error(e),
+          ),
+        ),
+      )
+      state.lOrders = []
+    }
+
     const minLOrder = _.minBy(state.lOrders, (o) => parseFloat(o.origQty))
     const minLOrderSize = minLOrder
       ? getPosSize(Math.abs(minLOrder.origQty), config.AMOUNT, config.GRID.length + 1, config.GRID)
@@ -374,44 +405,15 @@ const start = async (em, index, contents) => {
                   console.error(e),
               ),
           ),
-        ).then(async () => {
+        ).then(() => {
           console.log(config.SYMBOL, config.SIDE, 'cancelled limit orders', {
             a: minLOrderSize - posSize,
             posSize,
           })
-          const amount = config.AMOUNT
-          const orders = getOrders({
-            price: p.entryPrice,
-            amount,
-            count: config.GRID.length + 1,
-            sideSign: SIDE_SIGN,
-            start: Math.ceil(posSize) - 1,
-            grid: config.GRID,
-            pricePrecision: state.pricePrecision,
-            quantityPrecision: state.quantityPrecision,
-          })
-          orders.shift()
-          console.log(config.SYMBOL, config.SIDE, 'create orders')
-          await Promise.all(
-            _.map(orders, (o) =>
-              binance.futures[SIDE_SIGN > 0 ? 'buy' : 'sell'](
-                config.SYMBOL,
-                Math.abs(o.amount),
-                o.price,
-                {
-                  positionSide: p.positionSide,
-                  postOnly: true,
-                },
-              ).catch(
-                (e) =>
-                  console.log(config.SYMBOL, config.SIDE) ||
-                  console.error(new Error().stack) ||
-                  console.error(e),
-              ),
-            ),
-          )
-          state.lOrders = []
+          addLimitOrders()
         })
+      } else {
+        addLimitOrders()
       }
     }
     if (
