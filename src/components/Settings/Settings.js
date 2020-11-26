@@ -1,6 +1,6 @@
 import React from 'react'
 import moment from 'moment'
-import { Form, Input, Checkbox, Button, Collapse, DatePicker, Radio, Space } from 'antd'
+import { Form, Input, Checkbox, Button, Collapse, DatePicker, Radio, Space, message } from 'antd'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import Store from 'electron-store'
 
@@ -90,8 +90,9 @@ const Settings = () => {
 
   const [form] = Form.useForm()
   const onFinish = (values) => {
-    console.log('Success:', values)
     store.set(values)
+    console.log('Success:', values)
+    message.success('Saved')
   }
 
   const onFinishFailed = (errorInfo) => {
