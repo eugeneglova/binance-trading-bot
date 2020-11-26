@@ -233,6 +233,7 @@ const start = async (em, index, contents) => {
   const onPositionUpdateOriginal = async () => {
     // console.log(config.SYMBOL, config.SIDE, 'UPDATE POS')
     const p = state.position
+    if (!p) return
     const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
     // console.log(config.SYMBOL, config.SIDE, p)
 
