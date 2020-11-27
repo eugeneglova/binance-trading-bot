@@ -1,4 +1,6 @@
 const { Telegraf } = require('telegraf')
+const Binance = require('node-binance-api-ext')
+const moment = require('moment')
 const Store = require('electron-store')
 
 const { precision } = require('./functions')
@@ -6,6 +8,13 @@ const { precision } = require('./functions')
 const start = (em) => {
   const store = new Store()
   let config = store.get()
+
+  const binance = Binance({
+    APIKEY: store.get().APIKEY,
+    APISECRET: store.get().APISECRET,
+    useServerTime: true,
+    recvWindow: 15000,
+  })
 
   const configIntervalId = setInterval(() => {
     config = store.get()
@@ -62,6 +71,47 @@ const start = (em) => {
   }
 
   em.on('testmessage', onTestMessage)
+
+  bot.command('income', async (ctx) => {
+    const startTime = moment().utc().startOf('day').toDate().valueOf()
+    const endTime = Date.now()
+
+    const income = await binance.futures.income({
+      startTime,
+      endTime,
+      limit: 1000,
+    })
+
+    const realizedPnl = income.reduce((acc, item) => {
+      if (item.incomeType === 'REALIZED_PNL') {
+        return acc + parseFloat(item.income)
+      }
+      return acc
+    }, 0)
+
+    const funding = income.reduce((acc, item) => {
+      if (item.incomeType === 'FUNDING_FEE') {
+        return acc + parseFloat(item.income)
+      }
+      return acc
+    }, 0)
+
+    const commission = income.reduce((acc, item) => {
+      if (item.incomeType === 'COMMISSION') {
+        return acc + parseFloat(item.income)
+      }
+      return acc
+    }, 0)
+
+    const total = realizedPnl + funding + commission
+
+    ctx.reply([
+      `Realized PNL: ${precision(realizedPnl)}`,
+      `Funding: ${precision(funding)}`,
+      `Comission: ${precision(commission)}`,
+      `Total: ${precision(total)}`,
+    ].join('\n'))
+  })
 
   bot.launch()
 
