@@ -1,5 +1,5 @@
 import React from 'react'
-import { Form, Input, Button } from 'antd'
+import { Form, Input, Button, message } from 'antd'
 import Store from 'electron-store'
 
 const layout = {
@@ -23,6 +23,7 @@ const ApiKeys = () => {
   const onFinish = (values) => {
     store.set(values)
     console.log('Success:', values)
+    message.success('Saved')
   }
 
   const onFinishFailed = (errorInfo) => {

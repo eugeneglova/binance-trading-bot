@@ -1099,7 +1099,8 @@ const store = new Store({
     STOP_LONG: false,
     STOP_SHORT: false,
     TELEGRAM_NOTIFY_NEW_POS: true,
-    TELEGRAM_NOTIFY_UPDATE_POS: true,
+    TELEGRAM_NOTIFY_INCREASE_POS: true,
+    TELEGRAM_NOTIFY_DECREASE_POS: true,
     TELEGRAM_NOTIFY_CLOSE_POS: true,
   },
 })

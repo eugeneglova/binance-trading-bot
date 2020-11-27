@@ -103,55 +103,64 @@ const Trading = ({
     <div>
       <div>
         <div>
-          <Button
-            type="primary"
-            onClick={() => {
-              onConnect()
-            }}
-            disabled={isWSConnected}
-          >
-            Connect
-          </Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              onDisconnect()
-            }}
-            disabled={!isWSConnected}
-          >
-            Disconnect
-          </Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              onDisconnect()
-              onConnect()
-            }}
-            disabled={!isWSConnected}
-          >
-            Reconnect
-          </Button>
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => {
+                onConnect()
+              }}
+              disabled={isWSConnected}
+            >
+              Connect
+            </Button>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => {
+                onDisconnect()
+              }}
+              disabled={!isWSConnected}
+            >
+              Disconnect
+            </Button>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => {
+                onDisconnect()
+                onConnect()
+              }}
+              disabled={!isWSConnected}
+            >
+              Reconnect
+            </Button>
+          </Space>
         </div>
 
         <div>
-          <Button
-            type="primary"
-            onClick={() => {
-              onStartTelegramBot()
-            }}
-            disabled={isTelegramBotStarted}
-          >
-            Start Telegram Bot
-          </Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              onStopTelegramBot()
-            }}
-            disabled={!isTelegramBotStarted}
-          >
-            Stop Telegram Bot
-          </Button>
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => {
+                onStartTelegramBot()
+              }}
+              disabled={isTelegramBotStarted}
+            >
+              Start Telegram Bot
+            </Button>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => {
+                onStopTelegramBot()
+              }}
+              disabled={!isTelegramBotStarted}
+            >
+              Stop Telegram Bot
+            </Button>
+          </Space>
         </div>
 
         {config.POSITIONS.map((pos, index) => (
@@ -161,6 +170,7 @@ const Trading = ({
               <span>{pos.SIDE}</span>
               <Button
                 type="primary"
+                size="small"
                 onClick={() => {
                   onStart(index)
                 }}
@@ -170,6 +180,7 @@ const Trading = ({
               </Button>
               <Button
                 type="primary"
+                size="small"
                 onClick={() => {
                   onStop(index)
                 }}
@@ -179,6 +190,7 @@ const Trading = ({
               </Button>
               <Button
                 type="primary"
+                size="small"
                 onClick={() => {
                   onStop(index)
                   onStart(index)
@@ -189,6 +201,7 @@ const Trading = ({
               </Button>
               <Button
                 type="primary"
+                size="small"
                 onClick={() => {
                   ipcRenderer.send('cancelOrders', index)
                 }}
@@ -197,6 +210,7 @@ const Trading = ({
               </Button>
               <Button
                 type="primary"
+                size="small"
                 onClick={() => {
                   ipcRenderer.send('addStopOrder', index)
                 }}
