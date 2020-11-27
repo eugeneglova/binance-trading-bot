@@ -19,6 +19,8 @@ const start = async (em, index, contents) => {
   const store = new Store()
   let config = store.get().POSITIONS[index]
 
+  console.log(config.SYMBOL, config.SIDE, 'START')
+
   const configIntervalId = setInterval(() => {
     config = store.get().POSITIONS[index]
   }, 10 * 1000)
@@ -685,9 +687,14 @@ const start = async (em, index, contents) => {
 
   const createNewOrders = async () => {
     if (state.position) return
-    if (config.TRADES_COUNT >= config.TRADES_TILL_STOP) return
-    if (moment().isBefore(config.DATETIME_RANGE[0]) || moment().isAfter(config.DATETIME_RANGE[1]))
+    if (config.TRADES_COUNT >= config.TRADES_TILL_STOP) {
+      console.error(config.SYMBOL, config.SIDE, 'create orders till stop limit reached')
       return
+    }
+    if (moment().isBefore(config.DATETIME_RANGE[0]) || moment().isAfter(config.DATETIME_RANGE[1])) {
+      console.error(config.SYMBOL, config.SIDE, 'create orders date range limit reached')
+      return
+    }
     console.log(config.SYMBOL, config.SIDE, 'create orders by position timeout')
     await cancelOpenOrders()
     if (config.SIDE === 'AUTO') {
@@ -711,6 +718,7 @@ const start = async (em, index, contents) => {
   const createOrdersIntervalId = setInterval(createNewOrders, 2 * 60 * 1000)
 
   const stop = async () => {
+    console.log(config.SYMBOL, config.SIDE, 'STOP')
     state.lOrders = []
     state.tpOrders = []
     state.slOrder = null
