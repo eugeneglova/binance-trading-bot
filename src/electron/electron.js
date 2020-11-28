@@ -1208,8 +1208,8 @@ ipcMain.on('cancelOrders', (event, index) => {
 ipcMain.on('addStopOrder', (event, index) => {
   addStopOrder(index, mainWindow.webContents)
 })
-ipcMain.on('takeProfitOrder', (event, index) => {
-  takeProfitOrder(index, mainWindow.webContents)
+ipcMain.on('takeProfitOrder', (event, index, percent) => {
+  takeProfitOrder(index, percent, mainWindow.webContents)
 })
 
 ipcMain.on('test', async (event) => {

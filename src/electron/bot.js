@@ -909,7 +909,7 @@ const addStopOrder = async (index) => {
   )
 }
 
-const takeProfitOrder = async (index) => {
+const takeProfitOrder = async (index, percent = 100) => {
   const store = new Store()
   let config = store.get().POSITIONS[index]
 
@@ -960,7 +960,7 @@ const takeProfitOrder = async (index) => {
 
   await binance.futures[SIDE_SIGN < 0 ? 'buy' : 'sell'](
     config.SYMBOL,
-    Math.abs(parseFloat(p.positionAmt)),
+    Math.abs(parseFloat(p.positionAmt) * percent / 100),
     price,
     {
       positionSide: p.positionSide,
