@@ -949,9 +949,14 @@ const takeProfitOrder = async (index) => {
         console.error(new Error().stack) ||
         console.error(e),
     )
-  const topBookPrice = parseFloat(SIDE_SIGN > 0 ? quote.askPrice : quote.bidPrice)
+  const minTakeProfitPrice =
+    SIDE_SIGN > 0
+      ? Math.max(parseFloat(p.entryPrice), parseFloat(quote.askPrice))
+      : Math.min(parseFloat(p.entryPrice), parseFloat(quote.bidPrice))
 
-  const price = getNextPrice(topBookPrice, 0, -SIDE_SIGN, [{ PRICE_STEP: config.PRICE_DISTANCE }])
+  const price = getNextPrice(minTakeProfitPrice, 0, -SIDE_SIGN, [
+    { PRICE_STEP: config.PRICE_DISTANCE },
+  ])
 
   await binance.futures[SIDE_SIGN < 0 ? 'buy' : 'sell'](
     config.SYMBOL,
