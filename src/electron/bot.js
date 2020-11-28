@@ -872,6 +872,10 @@ const addStopOrder = async (index, percent = 100) => {
   })
 
   await binance.useServerTime()
+  const info = await binance.futures.exchangeInfo()
+  const { pricePrecision, quantityPrecision } = info.symbols.find(
+    (item) => item.symbol === config.SYMBOL,
+  )
   const positions = await binance.futures
     .positionRisk()
     .catch((e) => console.error(new Error().stack) || console.error(e))
@@ -892,11 +896,12 @@ const addStopOrder = async (index, percent = 100) => {
 
   const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
 
-  const spPrice = precision(getPLPrice(parseFloat(p.entryPrice), 0.05, SIDE_SIGN))
+  const spPrice = precision(getPLPrice(parseFloat(p.entryPrice), 0.05, SIDE_SIGN), pricePrecision)
+  const amount = precision(Math.abs((parseFloat(p.positionAmt) * percent) / 100), quantityPrecision)
 
   await binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
     config.SYMBOL,
-    Math.abs(parseFloat(p.positionAmt) * percent / 100),
+    amount,
     spPrice,
     {
       positionSide: p.positionSide,
@@ -921,6 +926,10 @@ const takeProfitOrder = async (index, percent = 100) => {
   })
 
   await binance.useServerTime()
+  const info = await binance.futures.exchangeInfo()
+  const { pricePrecision, quantityPrecision } = info.symbols.find(
+    (item) => item.symbol === config.SYMBOL,
+  )
   const positions = await binance.futures
     .positionRisk()
     .catch((e) => console.error(new Error().stack) || console.error(e))
@@ -954,18 +963,16 @@ const takeProfitOrder = async (index, percent = 100) => {
       ? Math.max(parseFloat(p.entryPrice), parseFloat(quote.askPrice))
       : Math.min(parseFloat(p.entryPrice), parseFloat(quote.bidPrice))
 
-  const price = getNextPrice(minTakeProfitPrice, 0, -SIDE_SIGN, [
-    { PRICE_STEP: config.PRICE_DISTANCE },
-  ])
+  const price = precision(
+    getNextPrice(minTakeProfitPrice, 0, -SIDE_SIGN, [{ PRICE_STEP: config.PRICE_DISTANCE }]),
+    pricePrecision,
+  )
 
-  await binance.futures[SIDE_SIGN < 0 ? 'buy' : 'sell'](
-    config.SYMBOL,
-    Math.abs(parseFloat(p.positionAmt) * percent / 100),
-    price,
-    {
-      positionSide: p.positionSide,
-    },
-  ).catch(
+  const amount = precision(Math.abs((parseFloat(p.positionAmt) * percent) / 100), quantityPrecision)
+
+  await binance.futures[SIDE_SIGN < 0 ? 'buy' : 'sell'](config.SYMBOL, amount, price, {
+    positionSide: p.positionSide,
+  }).catch(
     (e) =>
       console.log(config.SYMBOL, config.SIDE) ||
       console.error(new Error().stack) ||
