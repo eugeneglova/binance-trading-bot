@@ -9,7 +9,7 @@ const bot = require('./bot')
 const test = require('./test')
 const tgbot = require('./tgbot')
 
-const { start, connect, cancelOrders, addStopOrder } = bot
+const { start, connect, cancelOrders, addStopOrder, takeProfitOrder } = bot
 const { start: startTelegramBot } = tgbot
 
 const em = new events.EventEmitter()
@@ -1207,6 +1207,9 @@ ipcMain.on('cancelOrders', (event, index) => {
 
 ipcMain.on('addStopOrder', (event, index) => {
   addStopOrder(index, mainWindow.webContents)
+})
+ipcMain.on('takeProfitOrder', (event, index) => {
+  takeProfitOrder(index, mainWindow.webContents)
 })
 
 ipcMain.on('test', async (event) => {

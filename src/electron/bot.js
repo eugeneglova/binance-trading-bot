@@ -909,9 +909,69 @@ const addStopOrder = async (index) => {
   )
 }
 
+const takeProfitOrder = async (index) => {
+  const store = new Store()
+  let config = store.get().POSITIONS[index]
+
+  const binance = Binance({
+    APIKEY: store.get().APIKEY,
+    APISECRET: store.get().APISECRET,
+    useServerTime: true,
+    recvWindow: 15000,
+  })
+
+  await binance.useServerTime()
+  const positions = await binance.futures
+    .positionRisk()
+    .catch((e) => console.error(new Error().stack) || console.error(e))
+  if (!positions) {
+    console.error('ERROR: check positions')
+    return
+  }
+
+  const p = _.find(
+    positions,
+    ({ symbol, positionSide, positionAmt }) =>
+      symbol === config.SYMBOL &&
+      (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) &&
+      parseFloat(positionAmt) !== 0,
+  )
+
+  if (!p) return
+
+  const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
+
+  const quote = await binance.futures
+    .quote(config.SYMBOL)
+    .catch(
+      (e) =>
+        console.log(config.SYMBOL, config.SIDE) ||
+        console.error(new Error().stack) ||
+        console.error(e),
+    )
+  const topBookPrice = parseFloat(SIDE_SIGN > 0 ? quote.askPrice : quote.bidPrice)
+
+  const price = getNextPrice(topBookPrice, 0, -SIDE_SIGN, [{ PRICE_STEP: config.PRICE_DISTANCE }])
+
+  await binance.futures[SIDE_SIGN < 0 ? 'buy' : 'sell'](
+    config.SYMBOL,
+    Math.abs(parseFloat(p.positionAmt)),
+    price,
+    {
+      positionSide: p.positionSide,
+    },
+  ).catch(
+    (e) =>
+      console.log(config.SYMBOL, config.SIDE) ||
+      console.error(new Error().stack) ||
+      console.error(e),
+  )
+}
+
 module.exports = {
   start,
   connect,
   cancelOrders,
   addStopOrder,
+  takeProfitOrder,
 }
