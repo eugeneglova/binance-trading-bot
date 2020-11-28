@@ -288,15 +288,6 @@ const Trading = ({
                     >
                       Add Stop Without Loss
                     </Button>
-                    <Button
-                      type="primary"
-                      size="small"
-                      onClick={() => {
-                        ipcRenderer.send('takeProfitOrder', index)
-                      }}
-                    >
-                      Take Profit
-                    </Button>
                     <Dropdown overlay={getTpMenu(index)} placement="bottomRight">
                       <Button
                         type="primary"
