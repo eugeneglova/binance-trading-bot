@@ -860,7 +860,7 @@ const cancelOrders = async (index) => {
   cancelOpenOrders()
 }
 
-const addStopOrder = async (index) => {
+const addStopOrder = async (index, percent = 100) => {
   const store = new Store()
   let config = store.get().POSITIONS[index]
 
@@ -896,7 +896,7 @@ const addStopOrder = async (index) => {
 
   await binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
     config.SYMBOL,
-    Math.abs(parseFloat(p.positionAmt)),
+    Math.abs(parseFloat(p.positionAmt) * percent / 100),
     spPrice,
     {
       positionSide: p.positionSide,

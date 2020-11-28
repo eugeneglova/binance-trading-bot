@@ -105,13 +105,13 @@ const Trading = ({
     },
   ]
 
-  const getTpMenu = (index) => (
+  const getMenu = (index, action) => (
     <Menu>
       <Menu.Item>
         <Button
           size="small"
           onClick={() => {
-            ipcRenderer.send('takeProfitOrder', index, 10)
+            ipcRenderer.send(action, index, 10)
           }}
         >
           10%
@@ -121,7 +121,7 @@ const Trading = ({
         <Button
           size="small"
           onClick={() => {
-            ipcRenderer.send('takeProfitOrder', index, 25)
+            ipcRenderer.send(action, index, 25)
           }}
         >
           25%
@@ -131,7 +131,7 @@ const Trading = ({
         <Button
           size="small"
           onClick={() => {
-            ipcRenderer.send('takeProfitOrder', index, 50)
+            ipcRenderer.send(action, index, 50)
           }}
         >
           50%
@@ -141,7 +141,7 @@ const Trading = ({
         <Button
           size="small"
           onClick={() => {
-            ipcRenderer.send('takeProfitOrder', index, 75)
+            ipcRenderer.send(action, index, 75)
           }}
         >
           75%
@@ -151,7 +151,7 @@ const Trading = ({
         <Button
           size="small"
           onClick={() => {
-            ipcRenderer.send('takeProfitOrder', index, 100)
+            ipcRenderer.send(action, index, 100)
           }}
         >
           100%
@@ -279,16 +279,18 @@ const Trading = ({
                     >
                       Cancel Orders
                     </Button>
-                    <Button
-                      type="primary"
-                      size="small"
-                      onClick={() => {
-                        ipcRenderer.send('addStopOrder', index)
-                      }}
-                    >
-                      Add Stop Without Loss
-                    </Button>
-                    <Dropdown overlay={getTpMenu(index)} placement="bottomRight">
+                    <Dropdown overlay={getMenu(index, 'addStopOrder')} placement="bottomRight">
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => {
+                          ipcRenderer.send('addStopOrder', index)
+                        }}
+                      >
+                        Add Stop Without Loss
+                      </Button>
+                    </Dropdown>
+                    <Dropdown overlay={getMenu(index, 'takeProfitOrder')} placement="bottomRight">
                       <Button
                         type="primary"
                         size="small"
