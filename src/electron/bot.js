@@ -15,6 +15,15 @@ const {
   getPosSize,
 } = require('./functions')
 
+let exchangeInfo
+const getCachedExchangeInfo = async (binance) => {
+  if (exchangeInfo) {
+    return exchangeInfo
+  }
+  exchangeInfo = await binance.futures.exchangeInfo()
+  return exchangeInfo
+}
+
 const start = async (em, index, contents) => {
   const store = new Store()
   let config = store.get().POSITIONS[index]
@@ -662,7 +671,7 @@ const start = async (em, index, contents) => {
 
   // start
   await binance.useServerTime()
-  const info = await binance.futures.exchangeInfo()
+  const info = await getCachedExchangeInfo(binance)
   const { pricePrecision, quantityPrecision } = info.symbols.find(
     (item) => item.symbol === config.SYMBOL,
   )
@@ -872,7 +881,7 @@ const addStopOrder = async (index, percent = 100) => {
   })
 
   await binance.useServerTime()
-  const info = await binance.futures.exchangeInfo()
+  const info = await getCachedExchangeInfo(binance)
   const { pricePrecision, quantityPrecision } = info.symbols.find(
     (item) => item.symbol === config.SYMBOL,
   )
@@ -926,7 +935,7 @@ const takeProfitOrder = async (index, percent = 100) => {
   })
 
   await binance.useServerTime()
-  const info = await binance.futures.exchangeInfo()
+  const info = await getCachedExchangeInfo(binance)
   const { pricePrecision, quantityPrecision } = info.symbols.find(
     (item) => item.symbol === config.SYMBOL,
   )
