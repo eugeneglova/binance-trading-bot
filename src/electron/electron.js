@@ -1196,9 +1196,22 @@ ipcMain.on('stop', (event, index) => {
   isRunning[index] = false
   event.reply('onChangeIsRunning', JSON.stringify(isRunning))
 })
+em.on('start', async (index) => {
+  isRunning[index] = true
+  mainWindow.webContents.send('onChangeIsRunning', JSON.stringify(isRunning))
+  stopFunctions[index] = await start(em, index, mainWindow.webContents)
+})
+em.on('stop', (index) => {
+  stopFunctions[index] && stopFunctions[index]()
+  isRunning[index] = false
+  mainWindow.webContents.send('onChangeIsRunning', JSON.stringify(isRunning))
+})
 
 ipcMain.on('getIsRunning', (event) => {
   event.returnValue = JSON.stringify(isRunning)
+})
+em.on('getIsRunning', () => {
+  em.emit('tg:isRunning', isRunning)
 })
 
 ipcMain.on('cancelOrders', (event, index) => {
