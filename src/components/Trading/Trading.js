@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Table, Space, Collapse } from 'antd'
+import { Button, Table, Space, Collapse, List, Dropdown, Menu } from 'antd'
 import { ipcRenderer } from 'electron'
 import Store from 'electron-store'
 
@@ -23,9 +23,15 @@ const precision = (value, decimals = getDecimals(value)) =>
 const getPLPerc = (basePrice, price, sideSign) => ((price / basePrice - 1) / sideSign) * 100
 
 const Trading = ({
-  isRunning = [], onStart, onStop,
-  onConnect, onDisconnect, isWSConnected,
-  onStartTelegramBot, onStopTelegramBot, isTelegramBotStarted,
+  isRunning = [],
+  onStart,
+  onStop,
+  onConnect,
+  onDisconnect,
+  isWSConnected,
+  onStartTelegramBot,
+  onStopTelegramBot,
+  isTelegramBotStarted,
 }) => {
   const store = new Store()
   const config = store.get()
@@ -99,6 +105,61 @@ const Trading = ({
     },
   ]
 
+  const getMenu = (index, action) => (
+    <Menu>
+      <Menu.Item>
+        <Button
+          size="small"
+          onClick={() => {
+            ipcRenderer.send(action, index, 10)
+          }}
+        >
+          10%
+        </Button>
+      </Menu.Item>
+      <Menu.Item>
+        <Button
+          size="small"
+          onClick={() => {
+            ipcRenderer.send(action, index, 25)
+          }}
+        >
+          25%
+        </Button>
+      </Menu.Item>
+      <Menu.Item>
+        <Button
+          size="small"
+          onClick={() => {
+            ipcRenderer.send(action, index, 50)
+          }}
+        >
+          50%
+        </Button>
+      </Menu.Item>
+      <Menu.Item>
+        <Button
+          size="small"
+          onClick={() => {
+            ipcRenderer.send(action, index, 75)
+          }}
+        >
+          75%
+        </Button>
+      </Menu.Item>
+      <Menu.Item>
+        <Button
+          size="small"
+          onClick={() => {
+            ipcRenderer.send(action, index, 100)
+          }}
+        >
+          100%
+        </Button>
+      </Menu.Item>
+    </Menu>
+  )
+
   return (
     <div>
       <div>
@@ -163,62 +224,92 @@ const Trading = ({
           </Space>
         </div>
 
+        <List
+          itemLayout="horizontal"
+          dataSource={config.POSITIONS}
+          renderItem={(pos, index) => (
+            <List.Item>
+              <List.Item.Meta
+                title={
+                  <Space>
+                    {pos.SYMBOL} {pos.SIDE}
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => {
+                        onStart(index)
+                      }}
+                      disabled={isRunning[index]}
+                      loading={!!isRunning[index]}
+                    >
+                      Start
+                    </Button>
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => {
+                        onStop(index)
+                      }}
+                      disabled={!isRunning[index]}
+                      danger
+                    >
+                      Stop
+                    </Button>
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => {
+                        onStop(index)
+                        onStart(index)
+                      }}
+                      disabled={!isRunning[index]}
+                    >
+                      Restart
+                    </Button>
+                  </Space>
+                }
+                description={
+                  <Space>
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => {
+                        ipcRenderer.send('cancelOrders', index)
+                      }}
+                    >
+                      Cancel Orders
+                    </Button>
+                    <Dropdown overlay={getMenu(index, 'addStopOrder')} placement="bottomRight">
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => {
+                          ipcRenderer.send('addStopOrder', index)
+                        }}
+                      >
+                        Add Stop Without Loss
+                      </Button>
+                    </Dropdown>
+                    <Dropdown overlay={getMenu(index, 'takeProfitOrder')} placement="bottomRight">
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => {
+                          ipcRenderer.send('takeProfitOrder', index)
+                        }}
+                      >
+                        Take Profit
+                      </Button>
+                    </Dropdown>
+                  </Space>
+                }
+              />
+            </List.Item>
+          )}
+        />
+
         {config.POSITIONS.map((pos, index) => (
           <div>
-            <Space>
-              <span>{pos.SYMBOL}</span>
-              <span>{pos.SIDE}</span>
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => {
-                  onStart(index)
-                }}
-                disabled={isRunning[index]}
-              >
-                Start
-              </Button>
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => {
-                  onStop(index)
-                }}
-                disabled={!isRunning[index]}
-              >
-                Stop
-              </Button>
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => {
-                  onStop(index)
-                  onStart(index)
-                }}
-                disabled={!isRunning[index]}
-              >
-                Restart
-              </Button>
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => {
-                  ipcRenderer.send('cancelOrders', index)
-                }}
-              >
-                Cancel Orders
-              </Button>
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => {
-                  ipcRenderer.send('addStopOrder', index)
-                }}
-              >
-                Add Stop Without Loss
-              </Button>
-            </Space>
-
             {false && isRunning[index] && (
               <div>
                 {botState[index] && botState[index].position && (

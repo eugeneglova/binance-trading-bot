@@ -9,7 +9,7 @@ const bot = require('./bot')
 const test = require('./test')
 const tgbot = require('./tgbot')
 
-const { start, connect, cancelOrders, addStopOrder } = bot
+const { start, connect, cancelOrders, addStopOrder, takeProfitOrder } = bot
 const { start: startTelegramBot } = tgbot
 
 const em = new events.EventEmitter()
@@ -1196,17 +1196,33 @@ ipcMain.on('stop', (event, index) => {
   isRunning[index] = false
   event.reply('onChangeIsRunning', JSON.stringify(isRunning))
 })
+em.on('start', async (index) => {
+  isRunning[index] = true
+  mainWindow.webContents.send('onChangeIsRunning', JSON.stringify(isRunning))
+  stopFunctions[index] = await start(em, index, mainWindow.webContents)
+})
+em.on('stop', (index) => {
+  stopFunctions[index] && stopFunctions[index]()
+  isRunning[index] = false
+  mainWindow.webContents.send('onChangeIsRunning', JSON.stringify(isRunning))
+})
 
 ipcMain.on('getIsRunning', (event) => {
   event.returnValue = JSON.stringify(isRunning)
+})
+em.on('getIsRunning', () => {
+  em.emit('tg:isRunning', isRunning)
 })
 
 ipcMain.on('cancelOrders', (event, index) => {
   cancelOrders(index, mainWindow.webContents)
 })
 
-ipcMain.on('addStopOrder', (event, index) => {
-  addStopOrder(index, mainWindow.webContents)
+ipcMain.on('addStopOrder', (event, index, percent) => {
+  addStopOrder(index, percent, mainWindow.webContents)
+})
+ipcMain.on('takeProfitOrder', (event, index, percent) => {
+  takeProfitOrder(index, percent, mainWindow.webContents)
 })
 
 ipcMain.on('test', async (event) => {

@@ -15,6 +15,15 @@ const {
   getPosSize,
 } = require('./functions')
 
+let exchangeInfo
+const getCachedExchangeInfo = async (binance) => {
+  if (exchangeInfo) {
+    return exchangeInfo
+  }
+  exchangeInfo = await binance.futures.exchangeInfo()
+  return exchangeInfo
+}
+
 const start = async (em, index, contents) => {
   const store = new Store()
   let config = store.get().POSITIONS[index]
@@ -662,7 +671,7 @@ const start = async (em, index, contents) => {
 
   // start
   await binance.useServerTime()
-  const info = await binance.futures.exchangeInfo()
+  const info = await getCachedExchangeInfo(binance)
   const { pricePrecision, quantityPrecision } = info.symbols.find(
     (item) => item.symbol === config.SYMBOL,
   )
@@ -860,7 +869,7 @@ const cancelOrders = async (index) => {
   cancelOpenOrders()
 }
 
-const addStopOrder = async (index) => {
+const addStopOrder = async (index, percent = 100) => {
   const store = new Store()
   let config = store.get().POSITIONS[index]
 
@@ -872,6 +881,10 @@ const addStopOrder = async (index) => {
   })
 
   await binance.useServerTime()
+  const info = await getCachedExchangeInfo(binance)
+  const { pricePrecision, quantityPrecision } = info.symbols.find(
+    (item) => item.symbol === config.SYMBOL,
+  )
   const positions = await binance.futures
     .positionRisk()
     .catch((e) => console.error(new Error().stack) || console.error(e))
@@ -892,11 +905,12 @@ const addStopOrder = async (index) => {
 
   const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
 
-  const spPrice = precision(getPLPrice(parseFloat(p.entryPrice), 0.05, SIDE_SIGN))
+  const spPrice = precision(getPLPrice(parseFloat(p.entryPrice), 0.05, SIDE_SIGN), pricePrecision)
+  const amount = precision(Math.abs((parseFloat(p.positionAmt) * percent) / 100), quantityPrecision)
 
   await binance.futures[SIDE_SIGN < 0 ? 'stopMarketBuy' : 'stopMarketSell'](
     config.SYMBOL,
-    Math.abs(parseFloat(p.positionAmt)),
+    amount,
     spPrice,
     {
       positionSide: p.positionSide,
@@ -909,9 +923,76 @@ const addStopOrder = async (index) => {
   )
 }
 
+const takeProfitOrder = async (index, percent = 100) => {
+  const store = new Store()
+  let config = store.get().POSITIONS[index]
+
+  const binance = Binance({
+    APIKEY: store.get().APIKEY,
+    APISECRET: store.get().APISECRET,
+    useServerTime: true,
+    recvWindow: 15000,
+  })
+
+  await binance.useServerTime()
+  const info = await getCachedExchangeInfo(binance)
+  const { pricePrecision, quantityPrecision } = info.symbols.find(
+    (item) => item.symbol === config.SYMBOL,
+  )
+  const positions = await binance.futures
+    .positionRisk()
+    .catch((e) => console.error(new Error().stack) || console.error(e))
+  if (!positions) {
+    console.error('ERROR: check positions')
+    return
+  }
+
+  const p = _.find(
+    positions,
+    ({ symbol, positionSide, positionAmt }) =>
+      symbol === config.SYMBOL &&
+      (config.SIDE === 'AUTO' ? true : positionSide === config.SIDE) &&
+      parseFloat(positionAmt) !== 0,
+  )
+
+  if (!p) return
+
+  const SIDE_SIGN = p.positionSide === 'SHORT' ? -1 : 1
+
+  const quote = await binance.futures
+    .quote(config.SYMBOL)
+    .catch(
+      (e) =>
+        console.log(config.SYMBOL, config.SIDE) ||
+        console.error(new Error().stack) ||
+        console.error(e),
+    )
+  const minTakeProfitPrice =
+    SIDE_SIGN > 0
+      ? Math.max(parseFloat(p.entryPrice), parseFloat(quote.askPrice))
+      : Math.min(parseFloat(p.entryPrice), parseFloat(quote.bidPrice))
+
+  const price = precision(
+    getNextPrice(minTakeProfitPrice, 0, -SIDE_SIGN, [{ PRICE_STEP: config.PRICE_DISTANCE }]),
+    pricePrecision,
+  )
+
+  const amount = precision(Math.abs((parseFloat(p.positionAmt) * percent) / 100), quantityPrecision)
+
+  await binance.futures[SIDE_SIGN < 0 ? 'buy' : 'sell'](config.SYMBOL, amount, price, {
+    positionSide: p.positionSide,
+  }).catch(
+    (e) =>
+      console.log(config.SYMBOL, config.SIDE) ||
+      console.error(new Error().stack) ||
+      console.error(e),
+  )
+}
+
 module.exports = {
   start,
   connect,
   cancelOrders,
   addStopOrder,
+  takeProfitOrder,
 }
